@@ -330,6 +330,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                   cols="12"
                 >
                   <VTextField
+                 
                     label="TIA SN"
                   />
                 </VCol>
@@ -338,6 +339,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                   cols="12"
                 >
                   <VTextField
+                    
                     label="Converter SN"
                   />
                 </VCol>
