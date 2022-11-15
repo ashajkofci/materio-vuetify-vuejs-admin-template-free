@@ -7,12 +7,6 @@
         "editor.defaultFormatter": "dbaeumer.vscode-eslint",
         "editor.autoClosingBrackets": "always"
     },
-    "[markdown]": {
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-    },
-    "[scss]": {
-        "editor.defaultFormatter": "stylelint.vscode-stylelint"
-    },
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
@@ -23,13 +17,7 @@
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "volar.preview.port": 3000,
-    "volar.completion.preferredTagNameCase": "pascal",
     "eslint.options": {},
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true,
-        "source.fixAll.stylelint": true,
-        "source.organizeImports": true
-    },
     "eslint.alwaysShowStatus": true,
     "eslint.format.enable": true,
     "eslint.packageManager": "yarn",

@@ -17,22 +17,31 @@ const vuetifyTheme = useTheme()
       class="app-logo d-flex align-center gap-x-3 app-title-wrapper"
     >
       <!-- ℹ️ You can also use img tag or VImg here -->
-      <div v-html="logo" />
-
-      <Transition name="vertical-nav-app-title">
-        <h1 class="font-weight-semibold leading-normal text-xl text-uppercase">
-          Materio
-        </h1>
-      </Transition>
+      <VImg
+        src="/logo.png"
+        height="55"
+        style="left:-15px;top:-7px;"
+      />
     </RouterLink>
   </div>
 
   <!-- 👉 Nav items -->
   <ul>
+    <VerticalNavSectionTitle :item="{ heading: 'Calibration' }" />
+
+    <VerticalNavLink
+      :item="{
+        title: 'Optics calibration',
+        to: 'index',
+        icon: { icon: 'mdi-midi-input' }
+      }"
+    />
+    <VerticalNavSectionTitle :item="{ heading: 'Templates' }" />
+
     <VerticalNavLink
       :item="{
         title: 'Dashboard',
-        to: 'index',
+        to: 'dashboard',
         icon: { icon: 'mdi-home-outline' }
       }"
     />
@@ -111,7 +120,6 @@ const vuetifyTheme = useTheme()
       }"
     />
   </ul>
-
 </template>
 
 <style lang="scss">
@@ -127,5 +135,4 @@ const vuetifyTheme = useTheme()
 //     }
 //   }
 // }
-
 </style>

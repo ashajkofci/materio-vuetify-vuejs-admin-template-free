@@ -4,8 +4,8 @@ const theme = {
     light: {
       dark: false,
       colors: {
-        'primary': '#9155FD',
-        'secondary': '#8A8D93',
+        'primary': '#446E8C',
+        'secondary': '#F17C14',
         'on-secondary': '#fff',
         'success': '#56CA00',
         'info': '#16B1FF',
@@ -15,8 +15,8 @@ const theme = {
         'on-success': '#FFFFFF',
         'on-warning': '#FFFFFF',
         'background': '#F4F5FA',
-        'on-background': '#3A3541',
-        'on-surface': '#3A3541',
+        'on-background': '#474847',
+        'on-surface': '#474847',
         'grey-50': '#FAFAFA',
         'grey-100': '#F5F5F5',
         'grey-200': '#EEEEEE',
@@ -29,7 +29,7 @@ const theme = {
         'grey-900': '#212121',
       },
       variables: {
-        'border-color': '#3A3541',
+        'border-color': '#474847',
         'medium-emphasis-opacity': 0.68,
 
         // Shadows
@@ -52,9 +52,9 @@ const theme = {
         'on-success': '#FFFFFF',
         'on-warning': '#FFFFFF',
         'background': '#28243D',
-        'on-background': '#E7E3FC',
-        'surface': '#312D4B',
-        'on-surface': '#E7E3FC',
+        'on-background': '#e3e8fc',
+        'surface': '#2d304b',
+        'on-surface': '#e3e8fc',
         'grey-50': '#2A2E42',
         'grey-100': '#2F3349',
         'grey-200': '#4A5072',
