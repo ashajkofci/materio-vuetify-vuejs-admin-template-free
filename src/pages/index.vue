@@ -36,7 +36,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
           md="12"
         >
           <VCard
-            title="Live view parameters"
+            title="Parameters"
             class="position-relative"
           >
             <VCardText>
@@ -52,12 +52,21 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                   </VCol>
 
                   <VCol
-                    md="6"
-                    cols="12"
+                    md="3"
+                    cols="3"
                     class="mt-1"
                   >
                     <VBtn>
                       Connect
+                    </VBtn>
+                  </VCol>
+                  <VCol
+                    md="3"
+                    cols="3"
+                    class="mt-1"
+                  >
+                    <VBtn>
+                      Start
                     </VBtn>
                   </VCol>
                 </VRow>
@@ -103,33 +112,21 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                     />
                   </VCol>
                 </VRow>
+                <VRow>
+                  <VCol>
+                    <VRadioGroup inline>
+                      <VRadio
+                        label="Nanobeads"
+                        value="beads"
+                      />
+                      <VRadio
+                        label="3um beads"
+                        value="3um"
+                      />
+                    </VRadioGroup>
+                  </VCol>
+                </VRow>
               </VForm>
-            </VCardText>
-          </VCard>
-        </VCol>
-        <VCol
-          cols="12"
-          md="12"
-        >
-          <VCard
-            title="Laser parameters"
-            class="position-relative"
-          >
-            <VCardText>
-              <VRow>
-                <VCol>
-                  <VRadioGroup inline>
-                    <VRadio
-                      label="Nanobeads"
-                      value="beads"
-                    />
-                    <VRadio
-                      label="3um beads"
-                      value="3um"
-                    />
-                  </VRadioGroup>
-                </VCol>
-              </VRow>
             </VCardText>
           </VCard>
         </VCol>
@@ -305,13 +302,53 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
           md="12"
         >
           <VCard
-            title="Save"
+            title="Save acquisition"
             class="position-relative"
           >
             <VCardText>
-              <VBtn size="small">
-                Save
-              </VBtn>
+              <VRow>
+                <VCol
+                  md="6"
+                  cols="12"
+                >
+                  <VTextField
+                    label="Operator"
+                  />
+                </VCol>
+                <VCol
+                  md="6"
+                  cols="12"
+                >
+                  <VTextField
+                    label="OPT SN"
+                  />
+                </VCol>
+              </VRow>
+              <VRow>
+                <VCol
+                  md="6"
+                  cols="12"
+                >
+                  <VTextField
+                    label="TIA SN"
+                  />
+                </VCol>
+                <VCol
+                  md="6"
+                  cols="12"
+                >
+                  <VTextField
+                    label="Converter SN"
+                  />
+                </VCol>
+              </VRow>
+              <VRow>
+                <VCol>
+                  <VBtn>
+                    Launch & Save
+                  </VBtn>
+                </VCol>
+              </VRow>
             </VCardText>
           </VCard>
         </VCol>        
