@@ -16,6 +16,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
     <VCol
       cols="8"
       md="8"
+      sm="12"
     >
       <VCard
         title="Live view"
@@ -144,10 +145,11 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                   md="12"
                   cols="12"
                 >
-                  <VTextField
-                    label="Integration time"
-                    suffix="[s]"
-                  />
+                  <VSelect
+                      label="Integration time"
+                      :items="['1', '5', '10', '20']"
+                      suffix="[s]"
+                    />
                 </VCol>
               </VRow>
               <VRow>
