@@ -22,11 +22,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
         class="position-relative"
       >
         <VCardText>
-          <VImg src="/logo.png" />
-          <VImg src="/logo.png" />
-          <VBtn size="small">
-            Start
-          </VBtn>
+          Placeholder
         </VCardText>
       </VCard>
     </VCol>
@@ -45,6 +41,27 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
           >
             <VCardText>
               <VForm>
+                <VRow>
+                  <VCol
+                    md="6"
+                    cols="12"
+                  >
+                    <VTextField
+                      label="IP Address"
+                    />
+                  </VCol>
+
+                  <VCol
+                    md="6"
+                    cols="12"
+                    class="mt-1"
+                  >
+                    <VBtn>
+                      Connect
+                    </VBtn>
+                  </VCol>
+                </VRow>
+
                 <VRow>
                   <VCol
                     md="6"
@@ -243,9 +260,43 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
             class="position-relative"
           >
             <VCardText>
-              <VBtn size="small">
-                Start
-              </VBtn>
+              <VRow>
+                <VCol
+                  cols="2"
+                >
+                  <VBtn size="small">
+                    Reset
+                  </VBtn>
+                </VCol>
+                <VCol
+                  cols="2"
+                >
+                  <VBtn size="small">
+                    Prime
+                  </VBtn>
+                </VCol>
+                <VCol
+                  cols="2"
+                >
+                  <VBtn size="small">
+                    Flush
+                  </VBtn>
+                </VCol>
+                <VCol
+                  cols="3"
+                >
+                  <VBtn size="small">
+                    Pump 2mn
+                  </VBtn>
+                </VCol>
+                <VCol
+                  cols="3"
+                >
+                  <VBtn size="small">
+                    Pump 4mn
+                  </VBtn>
+                </VCol>
+              </VRow>
             </VCardText>
           </VCard>
         </VCol>
@@ -259,7 +310,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
           >
             <VCardText>
               <VBtn size="small">
-                Start
+                Save
               </VBtn>
             </VCardText>
           </VCard>
