@@ -56,21 +56,28 @@ function computeChartOptions() {
       name:xAxis.value,
       min: chartChannels[xAxis.value]["min"],
       max: chartChannels[xAxis.value]["max"],
+      nameLocation: "center",
+      nameTextStyle: {fontSize:14, padding:20},
     },
     yAxis: {
       name:yAxis.value,
       min: chartChannels[yAxis.value]["min"],
       max: chartChannels[yAxis.value]["max"],
+      nameLocation: "center",
+      nameTextStyle: {fontSize:14, padding:20},
     },
     tooltip: {},
     toolbox: {
       right: 20,
       feature: {
         dataZoom: {},
+        saveAsImage: {},
+
       },
     },
     animationEasingUpdate: 'cubicInOut',
     animationDurationUpdate: 1000,
+    grid: { bottom: 100 },
     dataZoom: [
       {
         type: 'inside',
