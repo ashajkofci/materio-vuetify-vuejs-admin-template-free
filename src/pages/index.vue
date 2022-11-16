@@ -53,7 +53,7 @@ let chartChannels =
   },
 }
 
-function computeChartOptions() {
+function computeChartOptions(data) {
   return {
     xAxis: {
       name:xAxis.value,
@@ -69,42 +69,18 @@ function computeChartOptions() {
       nameLocation: "center",
       nameTextStyle: {fontSize:14, padding:20},
     },
-    tooltip: {},
+    tooltip: {
+      show:false,
+    },
     toolbox: {
       right: 20,
       feature: {
-        dataZoom: {},
         saveAsImage: {},
-
       },
     },
     animationEasingUpdate: 'cubicInOut',
     animationDurationUpdate: 1000,
     grid: { bottom: 100 },
-    dataZoom: [
-      {
-        type: 'inside',
-      },
-      {
-        type: 'slider',
-        showDataShadow: true,
-        handleIcon:
-          'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
-        handleSize: '80%',
-      },
-      {
-        type: 'inside',
-        orient: 'vertical',
-      },
-      {
-        type: 'slider',
-        orient: 'vertical',
-        showDataShadow: true,
-        handleIcon:
-          'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
-        handleSize: '80%',
-      },
-    ],
     series: [
       {
         symbolSize: 4,
@@ -113,11 +89,6 @@ function computeChartOptions() {
           opacity: 0.4,
         },
         blendMode: 'lighter',
-        large: true,
-        largeThreshold: 500,
-        data: [
-          log_events[channelIndexes[xAxis.value]+1].map((e, i) => [e, log_events[channelIndexes[yAxis.value]+1][i]]),
-        ],
         type: 'scatter',
       },
     ]}
@@ -125,7 +96,31 @@ function computeChartOptions() {
 
 function refreshChart()
 {
-  chart.value.refreshOption(computeChartOptions())
+  console.log(log_events)
+  var data = log_events[channelIndexes[xAxis.value]+1].map((e, i) => [e, log_events[channelIndexes[yAxis.value]+1][i]])
+  chart.value.setOption(
+    {
+      xAxis: {
+        name:xAxis.value,
+        min: chartChannels[xAxis.value]["min"],
+        max: chartChannels[xAxis.value]["max"],
+        nameLocation: "center",
+        nameTextStyle: {fontSize:14, padding:20},
+      },
+      yAxis: {
+        name:yAxis.value,
+        min: chartChannels[yAxis.value]["min"],
+        max: chartChannels[yAxis.value]["max"],
+        nameLocation: "center",
+        nameTextStyle: {fontSize:14, padding:20},
+      },
+      series: [
+        {
+          data: data,
+        },
+      ],
+    },
+  )
 }
 
 onMounted( () => {
@@ -164,7 +159,6 @@ async function connectWebsocket()
           if (data.error === 101) {
             var events = data.msg[0]
             var debug_data = data.msg[4]
-            console.log(events)
             events.forEach((item, index, array) => {
               log_events[0].push(item[0])
               log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
@@ -272,7 +266,7 @@ function launchSave()
               <VueEcharts
                 ref="chart"
                 class="mx-auto"
-                :option="computeChartOptions()"
+                :option="computeChartOptions(log_events)"
                 style="height:700px; width: 700px"
               />
             </VCol>
