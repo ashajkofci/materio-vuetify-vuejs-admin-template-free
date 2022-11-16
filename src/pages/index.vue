@@ -9,6 +9,33 @@ import AnalyticsTotalProfitLineCharts from '@/views/dashboards/analytics/Analyti
 import AnalyticsTransactions from '@/views/dashboards/analytics/AnalyticsTransactions.vue'
 import AnalyticsWeeklyOverview from '@/views/dashboards/analytics/AnalyticsWeeklyOverview.vue'
 import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
+import { ref, onMounted } from "vue"
+
+// Constants
+const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
+const integrationTimes = [1, 5, 10, 15, 20, 30]
+
+// Form fields
+const ipAddress = ref("127.0.0.1")
+const eventBuffer = ref(10)
+const triggerChannel = ref("FL1")
+const xAxis = ref("FL1")
+const yAxis = ref("FL2")
+const beadsType = ref("beads")
+const statsIntegrationTime = ref(integrationTimes[0])
+const operator = ref("")
+const optSN = ref("")
+const tiaSN = ref("")
+const converterSN = ref("")
+
+// Save acquisition
+const requiredRules = [v => !!v || 'This field is required']
+let saveForm = ref(null)
+const launchSaveValid = ref(false)
+function launchSave()
+{
+  saveForm.value.validate()
+}
 </script>
 
 <template>
@@ -48,6 +75,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                     cols="12"
                   >
                     <VTextField
+                      v-model="ipAddress"
                       label="IP Address"
                     />
                   </VCol>
@@ -78,6 +106,7 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                     cols="12"
                   >
                     <VTextField
+                      v-model="eventBuffer"
                       label="Event buffer"
                       suffix="[s]"
                     />
@@ -88,8 +117,9 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                     cols="12"
                   >
                     <VSelect
+                      v-model="triggerChannel"
                       label="Trigger channel"
-                      :items="['FL1', 'FL2', 'SSC', 'FSC']"
+                      :items="availableChannels"
                     />
                   </VCol>
                 </VRow>
@@ -99,8 +129,9 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                     md="6"
                   >
                     <VSelect
+                      v-model="xAxis"
                       label="X-axis"
-                      :items="['FL1', 'FL2', 'SSC', 'FSC']"
+                      :items="availableChannels"
                     />
                   </VCol>
                   <VCol
@@ -108,14 +139,18 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                     md="6"
                   >
                     <VSelect
+                      v-model="yAxis"
                       label="Y-axis"
-                      :items="['FL1', 'FL2', 'SSC', 'FSC']"
+                      :items="availableChannels"
                     />
                   </VCol>
                 </VRow>
                 <VRow>
                   <VCol>
-                    <VRadioGroup inline>
+                    <VRadioGroup
+                      v-model="beadsType"
+                      inline
+                    >
                       <VRadio
                         label="Nanobeads"
                         value="beads"
@@ -146,10 +181,11 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
                   cols="12"
                 >
                   <VSelect
-                      label="Integration time"
-                      :items="['1', '5', '10', '20']"
-                      suffix="[s]"
-                    />
+                    v-model="statsIntegrationTime"
+                    label="Integration time"
+                    :items="integrationTimes"
+                    suffix="[s]"
+                  />
                 </VCol>
               </VRow>
               <VRow>
@@ -308,51 +344,63 @@ import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
             class="position-relative"
           >
             <VCardText>
-              <VRow>
-                <VCol
-                  md="6"
-                  cols="12"
-                >
-                  <VTextField
-                    label="Operator"
-                  />
-                </VCol>
-                <VCol
-                  md="6"
-                  cols="12"
-                >
-                  <VTextField
-                    label="OPT SN"
-                  />
-                </VCol>
-              </VRow>
-              <VRow>
-                <VCol
-                  md="6"
-                  cols="12"
-                >
-                  <VTextField
-                 
-                    label="TIA SN"
-                  />
-                </VCol>
-                <VCol
-                  md="6"
-                  cols="12"
-                >
-                  <VTextField
-                    
-                    label="Converter SN"
-                  />
-                </VCol>
-              </VRow>
-              <VRow>
-                <VCol>
-                  <VBtn>
-                    Launch & Save
-                  </VBtn>
-                </VCol>
-              </VRow>
+              <VForm
+                ref="saveForm"
+                v-model="launchSaveValid"
+                lazy-validation
+              >
+                <VRow>
+                  <VCol
+                    md="6"
+                    cols="12"
+                  >
+                    <VTextField
+                      v-model="operator"
+                      label="Operator"
+                      :rules="requiredRules"
+                    />
+                  </VCol>
+                  <VCol
+                    md="6"
+                    cols="12"
+                  >
+                    <VTextField
+                      v-model="optSN"
+                      label="OPT SN"
+                      :rules="requiredRules"
+                    />
+                  </VCol>
+                </VRow>
+                <VRow>
+                  <VCol
+                    md="6"
+                    cols="12"
+                  >
+                    <VTextField
+                      v-model="tiaSN"
+                      label="TIA SN"
+                      :rules="requiredRules"
+                    />
+                  </VCol>
+                  <VCol
+                    md="6"
+                    cols="12"
+                  >
+                    <VTextField
+                      v-model="converterSN"
+                      label="Converter SN"
+                      :rules="requiredRules"
+                    />
+                  </VCol>
+                </VRow>
+                <VRow>
+                  <VCol>
+                    <VBtn @click="launchSave">
+                      Launch & Save
+                    </VBtn>
+                  </VCol>
+                </VRow>
+              </VForm>
             </VCardText>
           </VCard>
         </VCol>        
