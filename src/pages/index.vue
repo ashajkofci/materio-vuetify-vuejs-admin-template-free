@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import { VueEcharts } from 'vue3-echarts'
-var nj = require('numjs')
 
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
@@ -168,25 +167,6 @@ async function connectWebsocket()
             })
             var last_timestamp = Math.max(...log_events[0])
 
-            // Filter old events for statistics
-            let log_events_stats = Object.assign({}, log_events)
-            var first_timestamp = last_timestamp - 200000 * statsIntegrationTime.value
-            log_events[0].forEach((item, index, array) => {
-              if (item < first_timestamp)
-              {
-                timestamps_to_remove.push(index)
-              }
-            })
-            for (var i = timestamps_to_remove.length -1; i >= 0; i--)
-            {
-              log_events_stats[0].splice(timestamps_to_remove[i], 1)
-              log_events_stats[1].splice(timestamps_to_remove[i], 1)
-              log_events_stats[2].splice(timestamps_to_remove[i], 1)
-              log_events_stats[3].splice(timestamps_to_remove[i], 1)
-              log_events_stats[4].splice(timestamps_to_remove[i], 1)
-            }
-            var stat_array = nj.array(log_events_stats)
-            
             // Filter old events
             var first_timestamp = last_timestamp - 200000 * eventBuffer.value
             var timestamps_to_remove = Array()
