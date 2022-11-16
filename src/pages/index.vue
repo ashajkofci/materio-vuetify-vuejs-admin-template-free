@@ -1,11 +1,12 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import { VueEcharts } from 'vue3-echarts'
+var nj = require('numjs')
 
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
 const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
-const integrationTimes = [1, 5, 10, 15, 20, 30]
+const integrationTimes = [1, 5, 10, 15, 20, 30, 60, 120]
 
 // Form fields
 const ipAddress = ref("127.0.0.1:8001")
@@ -78,8 +79,7 @@ function computeChartOptions(data) {
         saveAsImage: {},
       },
     },
-    animationEasingUpdate: 'cubicInOut',
-    animationDurationUpdate: 1000,
+    animation:false,
     grid: { bottom: 100 },
     series: [
       {
@@ -166,6 +166,45 @@ async function connectWebsocket()
               log_events[3].push(item[3] > 0 ? Math.log10(item[3]) : 0)
               log_events[4].push(item[4] > 0 ? Math.log10(item[4]) : 0)
             })
+            var last_timestamp = Math.max(...log_events[0])
+
+            // Filter old events for statistics
+            let log_events_stats = Object.assign({}, log_events)
+            var first_timestamp = last_timestamp - 200000 * statsIntegrationTime.value
+            log_events[0].forEach((item, index, array) => {
+              if (item < first_timestamp)
+              {
+                timestamps_to_remove.push(index)
+              }
+            })
+            for (var i = timestamps_to_remove.length -1; i >= 0; i--)
+            {
+              log_events_stats[0].splice(timestamps_to_remove[i], 1)
+              log_events_stats[1].splice(timestamps_to_remove[i], 1)
+              log_events_stats[2].splice(timestamps_to_remove[i], 1)
+              log_events_stats[3].splice(timestamps_to_remove[i], 1)
+              log_events_stats[4].splice(timestamps_to_remove[i], 1)
+            }
+            var stat_array = nj.array(log_events_stats)
+            
+            // Filter old events
+            var first_timestamp = last_timestamp - 200000 * eventBuffer.value
+            var timestamps_to_remove = Array()
+            log_events[0].forEach((item, index, array) => {
+              if (item < first_timestamp)
+              {
+                timestamps_to_remove.push(index)
+              }
+            })
+            for (var i = timestamps_to_remove.length -1; i >= 0; i--)
+            {
+              log_events[0].splice(timestamps_to_remove[i], 1)
+              log_events[1].splice(timestamps_to_remove[i], 1)
+              log_events[2].splice(timestamps_to_remove[i], 1)
+              log_events[3].splice(timestamps_to_remove[i], 1)
+              log_events[4].splice(timestamps_to_remove[i], 1)
+            }
+
             refreshChart()
           }
           else {
@@ -225,14 +264,35 @@ function startStopAcquisition()
   } else {
     // Start acquisition
     acquisitionStarted.value = true
-    sendRequest("acquisition", 2000)
+    var dac_setpoint = 1500
+    if (beadsType.value == "3um")
+    {
+      dac_setpoint = 250
+    }
+    sendRequest("acquisition", "600,"+dac_setpoint)
   }
+}
+
+// Laser control
+function changeSetpoint()
+{
+  var dac_setpoint = 1500
+  if (beadsType.value == "3um")
+  {
+    dac_setpoint = 250
+  }
+  sendRequest("async_setpoint", dac_setpoint)
 }
 
 // Pump control
 function launchPump(type)
 {
   pumpMessage.value = "Launching "+ type + "..."
+  if (type == "reset" && acquisitionStarted.value)
+  {
+    startStopAcquisition()
+  }
+  sendRequest("async_pump", type)
 }
 
 // Save acquisition
@@ -258,7 +318,26 @@ function launchSave()
         <VCardText>
           <VRow>
             <VCol>
-              {{ logMessage }}
+              <VAlert
+                v-if="logMessage && logMessage.error != 10"
+                border="top"
+                color="error"
+              >
+                <VAlertTitle class="mb-1">
+                  Error {{ logMessage.error }}
+                </VAlertTitle>
+                {{ logMessage.msg }}
+              </VAlert>
+              <VAlert
+                v-if="logMessage && logMessage.error == 10"
+                border="top"
+                color="success"
+              >
+                <VAlertTitle class="mb-1">
+                  {{ logMessage.msg }}
+                </VAlertTitle>
+                Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
+              </VAlert>
             </VCol>
           </VRow>
           <VRow>
@@ -386,6 +465,7 @@ function launchSave()
                     <VRadioGroup
                       v-model="beadsType"
                       inline
+                      @update:modelValue="changeSetpoint"
                     >
                       <VRadio
                         label="Nanobeads"
