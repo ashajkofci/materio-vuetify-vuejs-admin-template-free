@@ -12,9 +12,6 @@
 <body>
   <div id="app">
     <div id="loading-bg">
-      <div class="loading-logo">
-        <img src="/logo.png" height="50" alt="Logo" />
-      </div>
       <div class="loading">
         <div class="effect-1 effects"></div>
         <div class="effect-2 effects"></div>
@@ -25,7 +22,7 @@
   <script type="module" src="/src/main.js"></script>
   <script>
     const loaderColor = localStorage.getItem('Materio-initial-loader-bg') || '#FFFFFF'
-    const primaryColor = localStorage.getItem('Materio-initial-loader-color') || '#9155FD'
+    const primaryColor = localStorage.getItem('Materio-initial-loader-color') || '#446E8C'
 
     if (loaderColor)
       document.documentElement.style.setProperty('--initial-loader-bg', loaderColor)

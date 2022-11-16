@@ -1,14 +1,4 @@
 <script setup>
-import AnalyticsAward from '@/views/dashboards/analytics/AnalyticsAward.vue'
-import AnalyticsBarCharts from '@/views/dashboards/analytics/AnalyticsBarCharts.vue'
-import AnalyticsDatatable from '@/views/dashboards/analytics/AnalyticsDatatable.vue'
-import AnalyticsDepositWithdraw from '@/views/dashboards/analytics/AnalyticsDepositWithdraw.vue'
-import AnalyticsSalesByCountries from '@/views/dashboards/analytics/AnalyticsSalesByCountries.vue'
-import AnalyticsTotalEarning from '@/views/dashboards/analytics/AnalyticsTotalEarning.vue'
-import AnalyticsTotalProfitLineCharts from '@/views/dashboards/analytics/AnalyticsTotalProfitLineCharts.vue'
-import AnalyticsTransactions from '@/views/dashboards/analytics/AnalyticsTransactions.vue'
-import AnalyticsWeeklyOverview from '@/views/dashboards/analytics/AnalyticsWeeklyOverview.vue'
-import CardStatisticsVertical from '@core/components/CardStatisticsVertical.vue'
 import { ref, onMounted } from "vue"
 
 // Constants
@@ -27,9 +17,62 @@ const operator = ref("")
 const optSN = ref("")
 const tiaSN = ref("")
 const converterSN = ref("")
+const buttonReset = ref(null)
+const buttonPrime = ref(null)
+const buttonFlush = ref(null)
+const buttonPump = ref(null)
+const buttomPump2 = ref(null)
+const pumpMessage = ref("")
+
+// Form rules
+const requiredRules = [v => !!v || 'This field is required']
+const ipAddressRule = [v => (v.match(/\./g) || []).length > 1 || 'Please enter IP address or subdomain'] // wants at least two dots in address
+
+// Connect to websocket
+let websocketForm = ref(null)
+let connected = ref(false)
+const websocketFormValid = ref(false)
+function connectWebsocket()
+{
+  if (!connected.value)
+  {
+    websocketForm.value.validate()
+
+    // Connection valid
+    if (websocketFormValid.value)
+    {
+      connected.value = true
+    }
+  }
+  else
+  {
+    // Disconnect
+    connected.value = false
+  }
+}
+
+// Start acquisition
+let startAcquisitionButton = ref(null)
+var acquisitionStarted = ref(false)
+function startStopAcquisition()
+{
+  // Stop acquisition
+  if (acquisitionStarted.value)
+  {
+    acquisitionStarted.value = false
+  } else {
+    // Start acquisition
+    acquisitionStarted.value = true
+  }
+}
+
+// Pump control
+function launchPump(type)
+{
+  pumpMessage.value = "Launching "+ type + "..."
+}
 
 // Save acquisition
-const requiredRules = [v => !!v || 'This field is required']
 let saveForm = ref(null)
 const launchSaveValid = ref(false)
 function launchSave()
@@ -68,7 +111,11 @@ function launchSave()
             class="position-relative"
           >
             <VCardText>
-              <VForm>
+              <VForm
+                ref="websocketForm"
+                v-model="websocketFormValid"
+                lazy-validation
+              >
                 <VRow>
                   <VCol
                     md="6"
@@ -77,6 +124,7 @@ function launchSave()
                     <VTextField
                       v-model="ipAddress"
                       label="IP Address"
+                      :rules="ipAddressRule"
                     />
                   </VCol>
 
@@ -85,8 +133,8 @@ function launchSave()
                     cols="3"
                     class="mt-1"
                   >
-                    <VBtn>
-                      Connect
+                    <VBtn @click="connectWebsocket">
+                      {{ connected ? "Disconnect" : "Connect" }}
                     </VBtn>
                   </VCol>
                   <VCol
@@ -94,21 +142,26 @@ function launchSave()
                     cols="3"
                     class="mt-1"
                   >
-                    <VBtn>
-                      Start
+                    <VBtn
+                      ref="startAcquisitionButton"
+                      @click="startStopAcquisition"
+                    >
+                      {{ acquisitionStarted ? "Stop":"Start" }}
                     </VBtn>
                   </VCol>
                 </VRow>
-
+              </VForm>
+              <VForm>
                 <VRow>
                   <VCol
                     md="6"
                     cols="12"
                   >
-                    <VTextField
+                    <VSelect
                       v-model="eventBuffer"
                       label="Event buffer"
                       suffix="[s]"
+                      :items="integrationTimes"
                     />
                   </VCol>
 
@@ -299,37 +352,62 @@ function launchSave()
                 <VCol
                   cols="2"
                 >
-                  <VBtn size="small">
+                  <VBtn
+                    ref="buttonReset"
+                    size="small"
+                    @click="launchPump('reset')"
+                  >
                     Reset
                   </VBtn>
                 </VCol>
                 <VCol
                   cols="2"
                 >
-                  <VBtn size="small">
+                  <VBtn
+                    ref="buttonPrime"
+                    size="small"
+                    @click="launchPump('prime')"
+                  >
                     Prime
                   </VBtn>
                 </VCol>
                 <VCol
                   cols="2"
                 >
-                  <VBtn size="small">
+                  <VBtn
+                    ref="buttonFlush"
+                    size="small"
+                    @click="launchPump('flush')"
+                  >
                     Flush
                   </VBtn>
                 </VCol>
                 <VCol
                   cols="3"
                 >
-                  <VBtn size="small">
+                  <VBtn
+                    ref="buttonPump"
+                    size="small"
+                    @click="launchPump('pump')"
+                  >
                     Pump 2mn
                   </VBtn>
                 </VCol>
                 <VCol
                   cols="3"
                 >
-                  <VBtn size="small">
+                  <VBtn
+                    ref="buttonPump2"
+                    size="small"
+                    @click="launchPump('pump2')"
+                  >
                     Pump 4mn
                   </VBtn>
+                </VCol>
+              </VRow>
+              <VRow>
+                <VCol>
+                  {{ pumpMessage }}
                 </VCol>
               </VRow>
             </VCardText>
