@@ -196,6 +196,7 @@ async function connectWebsocket()
       ws.onclose = function (event) {
         wsMessage.value = "Disconnected!"
         connected.value = false
+        acquisitionStarted.value = false
       }
 
       ws.onerror = function (err) {
@@ -209,8 +210,11 @@ async function connectWebsocket()
   else
   {
     // Disconnect
-    ws.close()
+    await sendRequest("abort", "")
+    await ws.close()
     connected.value = false
+    wsMessage.value = "Disconnected!"
+    acquisitionStarted.value = false
   }
 }
 
@@ -285,6 +289,30 @@ function launchSave()
 </script>
 
 <template>
+  <VRow>
+    <VCol>
+      <VAlert
+        v-if="logMessage && logMessage.error != 10"
+        border="top"
+        color="error"
+      >
+        <VAlertTitle class="mb-1">
+          Error {{ logMessage.error }}
+        </VAlertTitle>
+        {{ logMessage.msg }}
+      </VAlert>
+      <VAlert
+        v-if="logMessage && logMessage.error == 10"
+        border="top"
+        color="success"
+      >
+        <VAlertTitle class="mb-1">
+          {{ logMessage.msg }}
+        </VAlertTitle>
+        Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
+      </VAlert>
+    </VCol>
+  </VRow>
   <VRow class="match-height">
     <VCol
       cols="8"
@@ -296,30 +324,6 @@ function launchSave()
         class="position-relative"
       >
         <VCardText>
-          <VRow>
-            <VCol>
-              <VAlert
-                v-if="logMessage && logMessage.error != 10"
-                border="top"
-                color="error"
-              >
-                <VAlertTitle class="mb-1">
-                  Error {{ logMessage.error }}
-                </VAlertTitle>
-                {{ logMessage.msg }}
-              </VAlert>
-              <VAlert
-                v-if="logMessage && logMessage.error == 10"
-                border="top"
-                color="success"
-              >
-                <VAlertTitle class="mb-1">
-                  {{ logMessage.msg }}
-                </VAlertTitle>
-                Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
-              </VAlert>
-            </VCol>
-          </VRow>
           <VRow>
             <VCol>
               <VueEcharts
@@ -370,7 +374,7 @@ function launchSave()
                     class="mt-1"
                   >
                     <VBtn @click="connectWebsocket">
-                      {{ connected ? "Disconnect" : "Connect" }}
+                      {{ connected ? "Close" : "Connect" }}
                     </VBtn>
                   </VCol>
                   <VCol
