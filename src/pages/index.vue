@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue"
+import { VueEcharts } from 'vue3-echarts'
 
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
@@ -24,6 +25,111 @@ const buttonPump = ref(null)
 const buttomPump2 = ref(null)
 const pumpMessage = ref("")
 const wsMessage = ref("")
+const chart = ref(null)
+
+
+// Plot data
+
+let chartChannels = 
+{
+  "FL1" : {
+    "min": 2,
+    "max": 8,
+  },
+  "FL2": {
+    "min": 1.5,
+    "max": 8,
+  },
+  "SSC": {
+    "min": 2,
+    "max": 8,
+  },
+  "FSC": {
+    "min": 2,
+    "max": 8,
+  },
+}
+
+function computeChartOptions() {
+  return {
+    xAxis: {
+      name:xAxis.value,
+      min: chartChannels[xAxis.value]["min"],
+      max: chartChannels[xAxis.value]["max"],
+    },
+    yAxis: {
+      name:yAxis.value,
+      min: chartChannels[yAxis.value]["min"],
+      max: chartChannels[yAxis.value]["max"],
+    },
+    tooltip: {},
+    toolbox: {
+      right: 20,
+      feature: {
+        dataZoom: {},
+      },
+    },
+    animationEasingUpdate: 'cubicInOut',
+    animationDurationUpdate: 1000,
+    dataZoom: [
+      {
+        type: 'inside',
+      },
+      {
+        type: 'slider',
+        showDataShadow: true,
+        handleIcon:
+          'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+        handleSize: '80%',
+      },
+      {
+        type: 'inside',
+        orient: 'vertical',
+      },
+      {
+        type: 'slider',
+        orient: 'vertical',
+        showDataShadow: true,
+        handleIcon:
+          'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+        handleSize: '80%',
+      },
+    ],
+    series: [
+      {
+        symbolSize: 4,
+        itemStyle: {
+          color: '#128de3',
+          opacity: 0.4,
+        },
+        blendMode: 'lighter',
+        large: true,
+        largeThreshold: 500,
+        data: [
+          [8.07, 6.95],
+          [9.05, 8.81],
+          [9.15, 7.2],
+          [3.03, 4.23],
+          [2.02, 4.47],
+          [1.05, 3.33],
+          [4.05, 4.96],
+          [6.03, 7.24],
+          [7.08, 5.82],
+          [5.02, 5.68],
+        ],
+        type: 'scatter',
+      },
+    ]}
+}
+
+function refreshChart()
+{
+  chart.value.refreshOption(computeChartOptions())
+}
+
+onMounted( () => {
+
+})
 
 // Form rules
 const requiredRules = [v => !!v || 'This field is required']
@@ -34,16 +140,18 @@ let websocketForm = ref(null)
 let connected = ref(false)
 const websocketFormValid = ref(false)
 let ws = null
-function connectWebsocket()
+async function connectWebsocket()
 {
   if (!connected.value)
   {
-    websocketForm.value.validate()
+    await websocketForm.value.validate()
 
     // Connection valid
     if (websocketFormValid.value)
     {
-      ws = new WebSocket("ws://" + ipAddress.value).onopen = function (event) {
+      ws = await new WebSocket("ws://" + ipAddress.value)
+      
+      ws.onopen = function (event) {
         wsMessage.value = "Connected!"
         connected.value = true
       }
@@ -70,7 +178,7 @@ function connectWebsocket()
         connected.value = false
         ws.close()
       }
-      ws.connect()
+
     }
   }
   else
@@ -123,7 +231,16 @@ function launchSave()
         class="position-relative"
       >
         <VCardText>
-          Placeholder
+          <VRow>
+            <VCol>
+              <VueEcharts
+                ref="chart"
+                class="mx-auto"
+                :option="computeChartOptions()"
+                style="height:700px; width: 700px"
+              />
+            </VCol>
+          </VRow>
         </VCardText>
       </VCard>
     </VCol>
@@ -220,6 +337,7 @@ function launchSave()
                       v-model="xAxis"
                       label="X-axis"
                       :items="availableChannels"
+                      @update:modelValue="refreshChart"
                     />
                   </VCol>
                   <VCol
