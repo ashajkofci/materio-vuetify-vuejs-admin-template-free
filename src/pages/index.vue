@@ -6,7 +6,7 @@ const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
 const integrationTimes = [1, 5, 10, 15, 20, 30]
 
 // Form fields
-const ipAddress = ref("127.0.0.1")
+const ipAddress = ref("127.0.0.1:8001")
 const eventBuffer = ref(10)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
@@ -23,15 +23,17 @@ const buttonFlush = ref(null)
 const buttonPump = ref(null)
 const buttomPump2 = ref(null)
 const pumpMessage = ref("")
+const wsMessage = ref("")
 
 // Form rules
 const requiredRules = [v => !!v || 'This field is required']
-const ipAddressRule = [v => (v.match(/\./g) || []).length > 1 || 'Please enter IP address or subdomain'] // wants at least two dots in address
+const ipAddressRule = [v => (v.match(/:/g) || []).length > 0 || 'Please enter IP address or subdomain'] // wants at least two dots in address
 
 // Connect to websocket
 let websocketForm = ref(null)
 let connected = ref(false)
 const websocketFormValid = ref(false)
+let ws = null
 function connectWebsocket()
 {
   if (!connected.value)
@@ -41,12 +43,40 @@ function connectWebsocket()
     // Connection valid
     if (websocketFormValid.value)
     {
-      connected.value = true
+      ws = new WebSocket("ws://" + ipAddress.value).onopen = function (event) {
+        wsMessage.value = "Connected!"
+        connected.value = true
+      }
+
+      ws.onmessage = event => {
+        let data = JSON.parse(event.data)
+        if (data.msg != "null") {
+          data.msg = JSON.parse(data.msg)
+          if (data.error === 101) {
+            // Statistics
+            events = data.msg[0]
+            debug_data = data.msg[4]
+          }
+        }
+      }
+
+      ws.onclose = function (event) {
+        wsMessage.value = "Disconnected!"
+        connected.value = false
+      }
+
+      ws.onerror = function (err) {
+        wsMessage.value = "Socket encountered error: "+ err
+        connected.value = false
+        ws.close()
+      }
+      ws.connect()
     }
   }
   else
   {
     // Disconnect
+    ws.close()
     connected.value = false
   }
 }
@@ -151,6 +181,11 @@ function launchSave()
                   </VCol>
                 </VRow>
               </VForm>
+              <VRow>
+                <VCol>
+                  {{ wsMessage }}
+                </VCol>
+              </VRow>
               <VForm>
                 <VRow>
                   <VCol

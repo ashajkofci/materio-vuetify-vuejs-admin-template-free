@@ -10,24 +10,6 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
 
 <template>
   <VerticalNavLayout>
-    <!-- 👉 navbar -->
-    <template #navbar>
-      <VSpacer />
-      <VBtn
-        icon
-        variant="text"
-        color="default"
-        class="me-2"
-        size="small"
-      >
-        <VIcon
-          icon="mdi-bell-outline"
-          size="24"
-        />
-      </VBtn>
-      <UserProfile />
-    </template>
-
     <!-- 👉 Drawer content -->
     <template #navigation-drawer-content>
       <DrawerContent />
