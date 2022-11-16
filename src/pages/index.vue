@@ -4,6 +4,7 @@ import { VueEcharts } from 'vue3-echarts'
 
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
+const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
 const integrationTimes = [1, 5, 10, 15, 20, 30]
 
 // Form fields
@@ -25,10 +26,12 @@ const buttonPump = ref(null)
 const buttomPump2 = ref(null)
 const pumpMessage = ref("")
 const wsMessage = ref("")
+const logMessage = ref("")
 const chart = ref(null)
 
 
 // Plot data
+var log_events = [Array(), Array(), Array(), Array(), Array()]
 
 let chartChannels = 
 {
@@ -113,16 +116,7 @@ function computeChartOptions() {
         large: true,
         largeThreshold: 500,
         data: [
-          [8.07, 6.95],
-          [9.05, 8.81],
-          [9.15, 7.2],
-          [3.03, 4.23],
-          [2.02, 4.47],
-          [1.05, 3.33],
-          [4.05, 4.96],
-          [6.03, 7.24],
-          [7.08, 5.82],
-          [5.02, 5.68],
+          log_events[channelIndexes[xAxis.value]+1].map((e, i) => [e, log_events[channelIndexes[yAxis.value]+1][i]]),
         ],
         type: 'scatter',
       },
@@ -168,9 +162,20 @@ async function connectWebsocket()
         if (data.msg != "null") {
           data.msg = JSON.parse(data.msg)
           if (data.error === 101) {
-            // Statistics
-            events = data.msg[0]
-            debug_data = data.msg[4]
+            var events = data.msg[0]
+            var debug_data = data.msg[4]
+            console.log(events)
+            events.forEach((item, index, array) => {
+              log_events[0].push(item[0])
+              log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
+              log_events[2].push(item[2] > 0 ? Math.log10(item[2]) : 0)
+              log_events[3].push(item[3] > 0 ? Math.log10(item[3]) : 0)
+              log_events[4].push(item[4] > 0 ? Math.log10(item[4]) : 0)
+            })
+            refreshChart()
+          }
+          else {
+            logMessage.value = data
           }
         }
       }
@@ -196,6 +201,23 @@ async function connectWebsocket()
   }
 }
 
+// Send WS request
+function sendRequest(command, arg) {
+  if (!connected.value)
+  {
+    console.log("not connected")
+    wsMessage.value = "Tried to send a request without connection."
+
+    return
+  }
+  const request = {
+    command: command,
+    args: String(arg),
+  }
+  ws.send(JSON.stringify(request))
+}
+
+
 // Start acquisition
 let startAcquisitionButton = ref(null)
 var acquisitionStarted = ref(false)
@@ -205,9 +227,11 @@ function startStopAcquisition()
   if (acquisitionStarted.value)
   {
     acquisitionStarted.value = false
+    sendRequest("abort", "")
   } else {
     // Start acquisition
     acquisitionStarted.value = true
+    sendRequest("acquisition", 2000)
   }
 }
 
@@ -238,6 +262,11 @@ function launchSave()
         class="position-relative"
       >
         <VCardText>
+          <VRow>
+            <VCol>
+              {{ logMessage }}
+            </VCol>
+          </VRow>
           <VRow>
             <VCol>
               <VueEcharts
