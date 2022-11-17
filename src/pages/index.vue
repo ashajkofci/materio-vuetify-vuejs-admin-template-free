@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import { VueEcharts } from 'vue3-echarts'
+import * as echarts from 'echarts'
 
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
@@ -32,6 +33,7 @@ const chart = ref(null)
 
 // Plot data
 var log_events = [Array(), Array(), Array(), Array(), Array()]
+var gates = null
 
 let chartChannels = 
 {
@@ -94,9 +96,38 @@ function computeChartOptions(data) {
     ]}
 }
 
+function renderGate(params, api) {
+  if (params.context.rendered) {
+    return
+  }
+
+  params.context.rendered = true
+
+  let points = []
+  for (let i = 0; i < gates.length; i++) {
+    points.push(api.coord(gates[i]))
+  }
+
+
+  return {
+    type: 'polygon',
+    shape: {
+      points: echarts.graphic.clipPointsByRect(points, {
+        x: params.coordSys.x,
+        y: params.coordSys.y,
+        width: params.coordSys.width,
+        height: params.coordSys.height,
+      }),
+    },
+    style: api.style({
+      fill: "transparent",
+      stroke: "red",
+    }),
+  }
+}
+
 function refreshChart()
 {
-  console.log(log_events)
   var data = log_events[channelIndexes[xAxis.value]+1].map((e, i) => [e, log_events[channelIndexes[yAxis.value]+1][i]])
   chart.value.setOption(
     {
@@ -117,6 +148,11 @@ function refreshChart()
       series: [
         {
           data: data,
+        },
+        {
+          type: 'custom',
+          renderItem: renderGate,
+          data: gates,
         },
       ],
     },
@@ -157,8 +193,10 @@ async function connectWebsocket()
         if (data.msg != "null") {
           data.msg = JSON.parse(data.msg)
           if (data.error === 101) {
+            console.log(data.msg)
             var events = data.msg[0]
-            var debug_data = data.msg[4]
+            gates = data.msg[1].fit_default.gates["fit-FL2"].points
+            var monitoring = data.msg[2]
             events.forEach((item, index, array) => {
               log_events[0].push(item[0])
               log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
