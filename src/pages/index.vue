@@ -30,6 +30,8 @@ const wsMessage = ref("")
 const logMessage = ref("")
 const chart = ref(null)
 
+// Stat data
+const statsData = ref(null)
 
 // Plot data
 var log_events = [Array(), Array(), Array(), Array(), Array()]
@@ -196,7 +198,7 @@ async function connectWebsocket()
             console.log(data.msg)
             var events = data.msg[0]
             gates = data.msg[1].fit_default.gates["fit-FL2"].points
-            var monitoring = data.msg[2]
+            statsData.value = data.msg[2]
             events.forEach((item, index, array) => {
               log_events[0].push(item[0])
               log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
@@ -543,7 +545,7 @@ function launchSave()
                           rCV [%]
                         </th>
                         <th class="text-center text-uppercase">
-                          Offset
+                          Mean
                         </th>
                         <th class="text-center text-uppercase">
                           Valid
@@ -556,13 +558,13 @@ function launchSave()
                           SSC
                         </td>
                         <td class="text-center">
-                          110
+                          {{ (statsData && statsData.ssc) ? statsData.ssc.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          45
+                          {{ (statsData && statsData.ssc) ? statsData.ssc.cv.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          -55.
+                          {{ (statsData && statsData.ssc) ? statsData.ssc.mean.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
                           🐸
@@ -573,13 +575,13 @@ function launchSave()
                           FL1
                         </td>
                         <td class="text-center">
-                          110
+                          {{ (statsData && statsData.ssc) ? statsData.fl1.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          45
+                          {{ (statsData && statsData.ssc) ? statsData.fl1.cv.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          -55.
+                          {{ (statsData && statsData.ssc) ? statsData.fl1.mean.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
                           🐙
@@ -590,13 +592,13 @@ function launchSave()
                           FL2
                         </td>
                         <td class="text-center">
-                          110
+                          {{ (statsData && statsData.ssc) ? statsData.fl2.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          45
+                          {{ (statsData && statsData.ssc) ? statsData.fl2.cv.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          -55.
+                          {{ (statsData && statsData.ssc) ? statsData.fl2.mean.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
                           🐸
@@ -607,13 +609,13 @@ function launchSave()
                           FSC
                         </td>
                         <td class="text-center">
-                          110
+                          {{ (statsData && statsData.ssc) ? statsData.fsc.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          45
+                          {{( statsData && statsData.ssc) ? statsData.fsc.cv.toFixed(2): "" }}
                         </td>
                         <td class="text-center">
-                          -55.
+                          {{ (statsData && statsData.ssc) ? statsData.fsc.mean.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
                           🐸
