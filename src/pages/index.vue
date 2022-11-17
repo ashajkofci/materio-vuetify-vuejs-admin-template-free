@@ -85,8 +85,9 @@ function computeChartOptions(data) {
         symbolSize: 4,
         itemStyle: {
           color: '#128de3',
-          opacity: 0.4,
+          opacity: 0.5,
         },
+        progressive:0,
         blendMode: 'lighter',
         type: 'scatter',
       },
@@ -253,6 +254,7 @@ function startStopAcquisition()
     {
       dac_setpoint = 250
     }
+    log_events = [Array(), Array(), Array(), Array(), Array()]
     sendRequest("acquisition_gate", "600,"+dac_setpoint)
   }
 }
