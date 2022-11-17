@@ -295,7 +295,7 @@ function startStopAcquisition()
       dac_setpoint = 250
     }
     log_events = [Array(), Array(), Array(), Array(), Array()]
-    sendRequest("acquisition_gate", "600,"+dac_setpoint)
+    sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
   }
 }
 
@@ -433,11 +433,7 @@ function launchSave()
                   </VCol>
                 </VRow>
               </VForm>
-              <VRow>
-                <VCol>
-                  {{ wsMessage }}
-                </VCol>
-              </VRow>
+
               <VForm>
                 <VRow>
                   <VCol
@@ -455,12 +451,9 @@ function launchSave()
                   <VCol
                     md="6"
                     cols="12"
+                    class="pt-6 pl-3"
                   >
-                    <VSelect
-                      v-model="triggerChannel"
-                      label="Trigger channel"
-                      :items="availableChannels"
-                    />
+                    {{ wsMessage }}
                   </VCol>
                 </VRow>
                 <VRow>
@@ -527,6 +520,7 @@ function launchSave()
                     label="Integration time"
                     :items="integrationTimes"
                     suffix="[s]"
+                    :disabled="acquisitionStarted"
                   />
                 </VCol>
               </VRow>
@@ -561,7 +555,7 @@ function launchSave()
                           {{ (statsData && statsData.ssc) ? statsData.ssc.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.ssc.cv.toFixed(2) : "" }}
+                          {{ (statsData && statsData.ssc) ? (statsData.ssc.cv*100).toFixed(1) : "" }}
                         </td>
                         <td class="text-center">
                           {{ (statsData && statsData.ssc) ? statsData.ssc.mean.toFixed(2) : "" }}
@@ -578,7 +572,7 @@ function launchSave()
                           {{ (statsData && statsData.ssc) ? statsData.fl1.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fl1.cv.toFixed(2) : "" }}
+                          {{ (statsData && statsData.ssc) ? (statsData.fl1.cv*100).toFixed(1) : "" }}
                         </td>
                         <td class="text-center">
                           {{ (statsData && statsData.ssc) ? statsData.fl1.mean.toFixed(2) : "" }}
@@ -595,7 +589,7 @@ function launchSave()
                           {{ (statsData && statsData.ssc) ? statsData.fl2.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fl2.cv.toFixed(2) : "" }}
+                          {{ (statsData && statsData.ssc) ? (statsData.fl2.cv*100).toFixed(1) : "" }}
                         </td>
                         <td class="text-center">
                           {{ (statsData && statsData.ssc) ? statsData.fl2.mean.toFixed(2) : "" }}
@@ -612,7 +606,7 @@ function launchSave()
                           {{ (statsData && statsData.ssc) ? statsData.fsc.median.toFixed(2) : "" }}
                         </td>
                         <td class="text-center">
-                          {{( statsData && statsData.ssc) ? statsData.fsc.cv.toFixed(2): "" }}
+                          {{ ( statsData && statsData.ssc) ? (statsData.fsc.cv*100).toFixed(1): "" }}
                         </td>
                         <td class="text-center">
                           {{ (statsData && statsData.ssc) ? statsData.fsc.mean.toFixed(2) : "" }}
