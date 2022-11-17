@@ -35,7 +35,7 @@ const drawer = ref(lgAndUp.value)
     </template>
     <slot name="navbar" />
   </VAppBar>
-  <VMain class="w-100">
+  <VMain class="w-100" style="--v-layout-top:0px;">
     <div class="pa-6">
       <slot />
     </div>

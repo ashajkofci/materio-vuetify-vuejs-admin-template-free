@@ -1,1 +1,14 @@
 // Write your overrides
+.v-card-item {
+  padding-top: 10px;
+  padding-right: 15px;
+  padding-bottom: 10px;
+  padding-left: 15px;
+}
+.v-col-12, .v-col-sm-12, .v-col-8, .v-col-md-8 {
+  padding:10px;
+}
+
+.v-row{
+  margin:-10px;
+}

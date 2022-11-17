@@ -253,7 +253,7 @@ function startStopAcquisition()
     {
       dac_setpoint = 250
     }
-    sendRequest("acquisition", "600,"+dac_setpoint)
+    sendRequest("acquisition_gate", "600,"+dac_setpoint)
   }
 }
 
