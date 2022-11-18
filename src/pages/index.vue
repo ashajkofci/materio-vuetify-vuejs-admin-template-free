@@ -10,12 +10,12 @@ const integrationTimes = [1, 5, 10, 15, 20, 30, 60, 120]
 
 // Form fields
 const ipAddress = ref("172.16.11.61:8001")
-const eventBuffer = ref(10)
+const eventBuffer = ref(20)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("FL2")
 const beadsType = ref("beads")
-const statsIntegrationTime = ref(integrationTimes[4])
+const statsIntegrationTime = ref(integrationTimes[5])
 const operator = ref("")
 const optSN = ref("")
 const tiaSN = ref("")
