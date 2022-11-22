@@ -250,6 +250,7 @@ async function connectWebsocket()
           else if(data.error == 102)
           {
             disableButtons.value = false
+            logMessage.value = data
           }
           else {
             logMessage.value = data
@@ -364,7 +365,7 @@ function launchSave()
     <VRow>
       <VCol>
         <VAlert
-          v-if="logMessage && logMessage.error != 10"
+          v-if="logMessage && (logMessage.error != 10 && logMessage.error != 102)"
           border="top"
           color="error"
         >
@@ -374,7 +375,7 @@ function launchSave()
           {{ logMessage.msg }}
         </VAlert>
         <VAlert
-          v-if="logMessage && logMessage.error == 10"
+          v-if="logMessage && (logMessage.error == 10 || logMessage.error == 102)"
           border="top"
           color="success"
         >
