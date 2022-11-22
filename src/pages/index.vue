@@ -205,6 +205,8 @@ async function connectWebsocket()
         wsMessage.value = "Connected!"
         connected.value = true
         disableButtons.value = false
+        logMessage.value = ""
+        pumpMessage.value = ""
       }
 
       ws.onmessage = event => {
@@ -742,7 +744,7 @@ function launchSave()
             md="12"
           >
             <VCard
-              title="Save acquisition"
+              :title="'Save '+beadsType+' acquisition'"
               class="position-relative"
             >
               <VCardText>
