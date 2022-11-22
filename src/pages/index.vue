@@ -3,6 +3,9 @@ import { ref, onMounted } from "vue"
 import { VueEcharts } from 'vue3-echarts'
 import * as echarts from 'echarts'
 
+// Root template
+const root = ref(null)
+
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
 const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
@@ -29,6 +32,7 @@ const pumpMessage = ref("")
 const wsMessage = ref("")
 const logMessage = ref("")
 const chart = ref(null)
+const disableButtons = ref(false)
 
 // Stat data
 const statsData = ref(null)
@@ -99,6 +103,11 @@ function computeChartOptions(data) {
 }
 
 function renderGate(params, api) {
+  if (xAxis.value != "FL1" || yAxis.value != "FL2")
+  {
+    return
+  }
+
   if (params.context.rendered) {
     return
   }
@@ -228,6 +237,10 @@ async function connectWebsocket()
 
             refreshChart()
           }
+          else if(data.error == 102)
+          {
+            disableButtons.value = false
+          }
           else {
             logMessage.value = data
           }
@@ -326,446 +339,467 @@ let saveForm = ref(null)
 const launchSaveValid = ref(false)
 function launchSave()
 {
-  saveForm.value.validate()
+  //saveForm.value.validate()
+  disableButtons.value = true
 }
 </script>
 
 <template>
-  <VRow>
-    <VCol>
-      <VAlert
-        v-if="logMessage && logMessage.error != 10"
-        border="top"
-        color="error"
-      >
-        <VAlertTitle class="mb-1">
-          Error {{ logMessage.error }}
-        </VAlertTitle>
-        {{ logMessage.msg }}
-      </VAlert>
-      <VAlert
-        v-if="logMessage && logMessage.error == 10"
-        border="top"
-        color="success"
-      >
-        <VAlertTitle class="mb-1">
-          {{ logMessage.msg }}
-        </VAlertTitle>
-        Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
-      </VAlert>
-    </VCol>
-  </VRow>
-  <VRow class="match-height">
-    <VCol
-      cols="8"
-      md="8"
-      sm="12"
-    >
-      <VCard
-        title="Live view"
-        class="position-relative"
-      >
-        <VCardText>
-          <VRow>
-            <VCol>
-              <VueEcharts
-                ref="chart"
-                class="mx-auto"
-                :option="computeChartOptions(log_events)"
-                style="height:700px; width: 700px"
-              />
-            </VCol>
-          </VRow>
-        </VCardText>
-      </VCard>
-    </VCol>
-    <VCol
-      cols="12"
-      md="4"
-    >
-      <VRow class="match-height">
-        <VCol
-          cols="12"
-          md="12"
+  <div ref="root">
+    <VRow>
+      <VCol>
+        <VAlert
+          v-if="logMessage && logMessage.error != 10"
+          border="top"
+          color="error"
         >
-          <VCard
-            title="Parameters"
-            class="position-relative"
+          <VAlertTitle class="mb-1">
+            Error {{ logMessage.error }}
+          </VAlertTitle>
+          {{ logMessage.msg }}
+        </VAlert>
+        <VAlert
+          v-if="logMessage && logMessage.error == 10"
+          border="top"
+          color="success"
+        >
+          <VAlertTitle class="mb-1">
+            {{ logMessage.msg }}
+          </VAlertTitle>
+          Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
+        </VAlert>
+      </VCol>
+    </VRow>
+    <VRow class="match-height">
+      <VCol
+        cols="8"
+        md="8"
+        sm="12"
+      >
+        <VCard
+          title="Live view"
+          class="position-relative"
+        >
+          <VCardText>
+            <VRow>
+              <VCol>
+                <VueEcharts
+                  ref="chart"
+                  class="mx-auto"
+                  :option="computeChartOptions(log_events)"
+                  style="height:700px; width: 700px"
+                />
+              </VCol>
+            </VRow>
+          </VCardText>
+        </VCard>
+      </VCol>
+      <VCol
+        cols="12"
+        md="4"
+      >
+        <VRow class="match-height">
+          <VCol
+            cols="12"
+            md="12"
           >
-            <VCardText>
-              <VForm
-                ref="websocketForm"
-                v-model="websocketFormValid"
-                lazy-validation
-              >
+            <VCard
+              title="Parameters"
+              class="position-relative"
+            >
+              <VCardText>
+                <VForm
+                  ref="websocketForm"
+                  v-model="websocketFormValid"
+                  lazy-validation
+                >
+                  <VRow>
+                    <VCol
+                      md="6"
+                      cols="12"
+                    >
+                      <VTextField
+                        v-model="ipAddress"
+                        label="IP Address"
+                        :rules="ipAddressRule"
+                        :disabled="disableButtons"
+                      />
+                    </VCol>
+
+                    <VCol
+                      md="3"
+                      cols="3"
+                      class="mt-1"
+                    >
+                      <VBtn
+                        :disabled="disableButtons"
+                        @click="connectWebsocket"
+                      >
+                        {{ connected ? "Close" : "Connect" }}
+                      </VBtn>
+                    </VCol>
+                    <VCol
+                      md="3"
+                      cols="3"
+                      class="mt-1"
+                    >
+                      <VBtn
+                        ref="startAcquisitionButton"
+                        :disabled="disableButtons"
+                        @click="startStopAcquisition"
+                      >
+                        {{ acquisitionStarted ? "Stop":"Start" }}
+                      </VBtn>
+                    </VCol>
+                  </VRow>
+                </VForm>
+
+                <VForm>
+                  <VRow>
+                    <VCol
+                      md="6"
+                      cols="12"
+                    >
+                      <VSelect
+                        v-model="eventBuffer"
+                        label="Event buffer"
+                        suffix="[s]"
+                        :items="integrationTimes"
+                        :disabled="disableButtons"
+                      />
+                    </VCol>
+
+                    <VCol
+                      md="6"
+                      cols="12"
+                      class="pt-6 pl-3"
+                    >
+                      {{ wsMessage }}
+                    </VCol>
+                  </VRow>
+                  <VRow>
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <VSelect
+                        v-model="xAxis"
+                        label="X-axis"
+                        :items="availableChannels"
+                        :disabled="disableButtons"
+                        @update:modelValue="refreshChart"
+                      />
+                    </VCol>
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <VSelect
+                        v-model="yAxis"
+                        label="Y-axis"
+                        :items="availableChannels"
+                        :disabled="disableButtons"
+                      />
+                    </VCol>
+                  </VRow>
+                  <VRow>
+                    <VCol>
+                      <VRadioGroup
+                        v-model="beadsType"
+                        inline
+                        :disabled="disableButtons"
+                        @update:modelValue="changeSetpoint"
+                      >
+                        <VRadio
+                          label="Nanobeads"
+                          value="beads"
+                        />
+                        <VRadio
+                          label="3um beads"
+                          value="3um"
+                        />
+                      </VRadioGroup>
+                    </VCol>
+                  </VRow>
+                </VForm>
+              </VCardText>
+            </VCard>
+          </VCol>
+          <VCol
+            cols="12"
+            md="12"
+          >
+            <VCard
+              title="Statistics"
+              class="position-relative"
+            >
+              <VCardText>
                 <VRow>
                   <VCol
-                    md="6"
+                    md="12"
                     cols="12"
                   >
-                    <VTextField
-                      v-model="ipAddress"
-                      label="IP Address"
-                      :rules="ipAddressRule"
+                    <VSelect
+                      v-model="statsIntegrationTime"
+                      label="Integration time"
+                      :items="integrationTimes"
+                      suffix="[s]"
+                      :disabled="acquisitionStarted || disableButtons"
                     />
                   </VCol>
-
-                  <VCol
-                    md="3"
-                    cols="3"
-                    class="mt-1"
-                  >
-                    <VBtn @click="connectWebsocket">
-                      {{ connected ? "Close" : "Connect" }}
-                    </VBtn>
+                </VRow>
+                <VRow>
+                  <VCol>
+                    <VTable density="compact">
+                      <thead>
+                        <tr>
+                          <th class="text-uppercase">
+                            Channel
+                          </th>
+                          <th class="text-center text-uppercase">
+                            Median
+                          </th>
+                          <th class="text-center text-uppercase">
+                            rCV [%]
+                          </th>
+                          <th class="text-center text-uppercase">
+                            Mean
+                          </th>
+                          <th class="text-center text-uppercase">
+                            Valid
+                          </th>                        
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            SSC
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.ssc.median.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? (statsData.ssc.cv*100).toFixed(1) : "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.ssc.mean.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            🐸
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            FL1
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.fl1.median.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? (statsData.fl1.cv*100).toFixed(1) : "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.fl1.mean.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            🐙
+                          </td>
+                        </tr>    
+                        <tr>
+                          <td>
+                            FL2
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.fl2.median.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? (statsData.fl2.cv*100).toFixed(1) : "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.fl2.mean.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            🐸
+                          </td>
+                        </tr>    
+                        <tr>
+                          <td>
+                            FSC
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.fsc.median.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ ( statsData && statsData.ssc) ? (statsData.fsc.cv*100).toFixed(1): "" }}
+                          </td>
+                          <td class="text-center">
+                            {{ (statsData && statsData.ssc) ? statsData.fsc.mean.toFixed(2) : "" }}
+                          </td>
+                          <td class="text-center">
+                            🐸
+                          </td>
+                        </tr>                                  
+                      </tbody>
+                    </VTable>
                   </VCol>
+                </VRow>
+              </VCardText>
+            </VCard>
+          </VCol>
+          <VCol
+            cols="12"
+            md="12"
+          >
+            <VCard
+              title="Pump control"
+              class="position-relative"
+            >
+              <VCardText>
+                <VRow>
                   <VCol
-                    md="3"
-                    cols="3"
-                    class="mt-1"
+                    cols="2"
                   >
                     <VBtn
-                      ref="startAcquisitionButton"
-                      @click="startStopAcquisition"
+                      ref="buttonReset"
+                      size="small"
+                      :disabled="disableButtons"
+                      @click="launchPump('reset')"
                     >
-                      {{ acquisitionStarted ? "Stop":"Start" }}
+                      Reset
                     </VBtn>
                   </VCol>
-                </VRow>
-              </VForm>
-
-              <VForm>
-                <VRow>
                   <VCol
-                    md="6"
-                    cols="12"
+                    cols="2"
                   >
-                    <VSelect
-                      v-model="eventBuffer"
-                      label="Event buffer"
-                      suffix="[s]"
-                      :items="integrationTimes"
-                    />
-                  </VCol>
-
-                  <VCol
-                    md="6"
-                    cols="12"
-                    class="pt-6 pl-3"
-                  >
-                    {{ wsMessage }}
-                  </VCol>
-                </VRow>
-                <VRow>
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
-                    <VSelect
-                      v-model="xAxis"
-                      label="X-axis"
-                      :items="availableChannels"
-                      @update:modelValue="refreshChart"
-                    />
+                    <VBtn
+                      ref="buttonPrime"
+                      size="small"
+                      :disabled="disableButtons"
+                      @click="launchPump('prime')"
+                    >
+                      Prime
+                    </VBtn>
                   </VCol>
                   <VCol
-                    cols="12"
-                    md="6"
+                    cols="2"
                   >
-                    <VSelect
-                      v-model="yAxis"
-                      label="Y-axis"
-                      :items="availableChannels"
-                    />
+                    <VBtn
+                      ref="buttonFlush"
+                      size="small"
+                      :disabled="disableButtons"
+                      @click="launchPump('flush')"
+                    >
+                      Flush
+                    </VBtn>
+                  </VCol>
+                  <VCol
+                    cols="3"
+                  >
+                    <VBtn
+                      ref="buttonPump"
+                      size="small"
+                      :disabled="disableButtons"
+                      @click="launchPump('pump')"
+                    >
+                      Pump 2mn
+                    </VBtn>
+                  </VCol>
+                  <VCol
+                    cols="3"
+                  >
+                    <VBtn
+                      ref="buttonPump2"
+                      size="small"
+                      :disabled="disableButtons"
+                      @click="launchPump('pump2')"
+                    >
+                      Pump 4mn
+                    </VBtn>
                   </VCol>
                 </VRow>
                 <VRow>
                   <VCol>
-                    <VRadioGroup
-                      v-model="beadsType"
-                      inline
-                      @update:modelValue="changeSetpoint"
+                    {{ pumpMessage }}
+                  </VCol>
+                </VRow>
+              </VCardText>
+            </VCard>
+          </VCol>
+          <VCol
+            cols="12"
+            md="12"
+          >
+            <VCard
+              title="Save acquisition"
+              class="position-relative"
+            >
+              <VCardText>
+                <VForm
+                  ref="saveForm"
+                  v-model="launchSaveValid"
+                  lazy-validation
+                >
+                  <VRow>
+                    <VCol
+                      md="6"
+                      cols="12"
                     >
-                      <VRadio
-                        label="Nanobeads"
-                        value="beads"
+                      <VTextField
+                        v-model="operator"
+                        label="Operator"
+                        :rules="requiredRules"
                       />
-                      <VRadio
-                        label="3um beads"
-                        value="3um"
+                    </VCol>
+                    <VCol
+                      md="6"
+                      cols="12"
+                    >
+                      <VTextField
+                        v-model="optSN"
+                        label="OPT SN"
+                        :rules="requiredRules"
                       />
-                    </VRadioGroup>
-                  </VCol>
-                </VRow>
-              </VForm>
-            </VCardText>
-          </VCard>
-        </VCol>
-        <VCol
-          cols="12"
-          md="12"
-        >
-          <VCard
-            title="Statistics"
-            class="position-relative"
-          >
-            <VCardText>
-              <VRow>
-                <VCol
-                  md="12"
-                  cols="12"
-                >
-                  <VSelect
-                    v-model="statsIntegrationTime"
-                    label="Integration time"
-                    :items="integrationTimes"
-                    suffix="[s]"
-                    :disabled="acquisitionStarted"
-                  />
-                </VCol>
-              </VRow>
-              <VRow>
-                <VCol>
-                  <VTable density="compact">
-                    <thead>
-                      <tr>
-                        <th class="text-uppercase">
-                          Channel
-                        </th>
-                        <th class="text-center text-uppercase">
-                          Median
-                        </th>
-                        <th class="text-center text-uppercase">
-                          rCV [%]
-                        </th>
-                        <th class="text-center text-uppercase">
-                          Mean
-                        </th>
-                        <th class="text-center text-uppercase">
-                          Valid
-                        </th>                        
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>
-                          SSC
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.ssc.median.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? (statsData.ssc.cv*100).toFixed(1) : "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.ssc.mean.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          🐸
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          FL1
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fl1.median.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? (statsData.fl1.cv*100).toFixed(1) : "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fl1.mean.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          🐙
-                        </td>
-                      </tr>    
-                      <tr>
-                        <td>
-                          FL2
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fl2.median.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? (statsData.fl2.cv*100).toFixed(1) : "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fl2.mean.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          🐸
-                        </td>
-                      </tr>    
-                      <tr>
-                        <td>
-                          FSC
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fsc.median.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ ( statsData && statsData.ssc) ? (statsData.fsc.cv*100).toFixed(1): "" }}
-                        </td>
-                        <td class="text-center">
-                          {{ (statsData && statsData.ssc) ? statsData.fsc.mean.toFixed(2) : "" }}
-                        </td>
-                        <td class="text-center">
-                          🐸
-                        </td>
-                      </tr>                                  
-                    </tbody>
-                  </VTable>
-                </VCol>
-              </VRow>
-            </VCardText>
-          </VCard>
-        </VCol>
-        <VCol
-          cols="12"
-          md="12"
-        >
-          <VCard
-            title="Pump control"
-            class="position-relative"
-          >
-            <VCardText>
-              <VRow>
-                <VCol
-                  cols="2"
-                >
-                  <VBtn
-                    ref="buttonReset"
-                    size="small"
-                    @click="launchPump('reset')"
-                  >
-                    Reset
-                  </VBtn>
-                </VCol>
-                <VCol
-                  cols="2"
-                >
-                  <VBtn
-                    ref="buttonPrime"
-                    size="small"
-                    @click="launchPump('prime')"
-                  >
-                    Prime
-                  </VBtn>
-                </VCol>
-                <VCol
-                  cols="2"
-                >
-                  <VBtn
-                    ref="buttonFlush"
-                    size="small"
-                    @click="launchPump('flush')"
-                  >
-                    Flush
-                  </VBtn>
-                </VCol>
-                <VCol
-                  cols="3"
-                >
-                  <VBtn
-                    ref="buttonPump"
-                    size="small"
-                    @click="launchPump('pump')"
-                  >
-                    Pump 2mn
-                  </VBtn>
-                </VCol>
-                <VCol
-                  cols="3"
-                >
-                  <VBtn
-                    ref="buttonPump2"
-                    size="small"
-                    @click="launchPump('pump2')"
-                  >
-                    Pump 4mn
-                  </VBtn>
-                </VCol>
-              </VRow>
-              <VRow>
-                <VCol>
-                  {{ pumpMessage }}
-                </VCol>
-              </VRow>
-            </VCardText>
-          </VCard>
-        </VCol>
-        <VCol
-          cols="12"
-          md="12"
-        >
-          <VCard
-            title="Save acquisition"
-            class="position-relative"
-          >
-            <VCardText>
-              <VForm
-                ref="saveForm"
-                v-model="launchSaveValid"
-                lazy-validation
-              >
-                <VRow>
-                  <VCol
-                    md="6"
-                    cols="12"
-                  >
-                    <VTextField
-                      v-model="operator"
-                      label="Operator"
-                      :rules="requiredRules"
-                    />
-                  </VCol>
-                  <VCol
-                    md="6"
-                    cols="12"
-                  >
-                    <VTextField
-                      v-model="optSN"
-                      label="OPT SN"
-                      :rules="requiredRules"
-                    />
-                  </VCol>
-                </VRow>
-                <VRow>
-                  <VCol
-                    md="6"
-                    cols="12"
-                  >
-                    <VTextField
-                      v-model="tiaSN"
-                      label="TIA SN"
-                      :rules="requiredRules"
-                    />
-                  </VCol>
-                  <VCol
-                    md="6"
-                    cols="12"
-                  >
-                    <VTextField
-                      v-model="converterSN"
-                      label="Converter SN"
-                      :rules="requiredRules"
-                    />
-                  </VCol>
-                </VRow>
-                <VRow>
-                  <VCol>
-                    <VBtn @click="launchSave">
-                      Launch & Save
-                    </VBtn>
-                  </VCol>
-                </VRow>
-              </VForm>
-            </VCardText>
-          </VCard>
-        </VCol>        
-      </VRow>
-    </VCol>
-  </VRow>
+                    </VCol>
+                  </VRow>
+                  <VRow>
+                    <VCol
+                      md="6"
+                      cols="12"
+                    >
+                      <VTextField
+                        v-model="tiaSN"
+                        label="TIA SN"
+                        :rules="requiredRules"
+                      />
+                    </VCol>
+                    <VCol
+                      md="6"
+                      cols="12"
+                    >
+                      <VTextField
+                        v-model="converterSN"
+                        label="Converter SN"
+                        :rules="requiredRules"
+                      />
+                    </VCol>
+                  </VRow>
+                  <VRow>
+                    <VCol>
+                      <VBtn 
+                        :disabled="disableButtons"
+                        :loading="disableButtons"
+                        @click="launchSave"
+                      >
+                        Launch & Save
+                      </VBtn>
+                    </VCol>
+                  </VRow>
+                </VForm>
+              </VCardText>
+            </VCard>
+          </VCol>        
+        </VRow>
+      </VCol>
+    </VRow>
+  </div>
 </template>
