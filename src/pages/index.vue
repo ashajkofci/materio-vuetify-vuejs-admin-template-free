@@ -32,7 +32,7 @@ const pumpMessage = ref("")
 const wsMessage = ref("")
 const logMessage = ref("")
 const chart = ref(null)
-const disableButtons = ref(false)
+const disableButtons = ref(true)
 
 // Stat data
 const statsData = ref(null)
@@ -40,6 +40,13 @@ const statsData = ref(null)
 // Plot data
 var log_events = [Array(), Array(), Array(), Array(), Array()]
 var gates = null
+
+let dacSetpoints = 
+{
+  "3um": 250,
+  "beads": 1500,
+}
+var dac_setpoint = dacSetpoints['beads']
 
 let chartChannels = 
 {
@@ -197,6 +204,7 @@ async function connectWebsocket()
       ws.onopen = function (event) {
         wsMessage.value = "Connected!"
         connected.value = true
+        disableButtons.value = false
       }
 
       ws.onmessage = event => {
@@ -278,6 +286,7 @@ function sendRequest(command, arg) {
   {
     console.log("not connected")
     wsMessage.value = "Tried to send a request without connection."
+    disableButtons.value = false
 
     return
   }
@@ -315,10 +324,9 @@ function startStopAcquisition()
 // Laser control
 function changeSetpoint()
 {
-  var dac_setpoint = 1500
   if (beadsType.value == "3um")
   {
-    dac_setpoint = 250
+    dac_setpoint = dacSetpoints[beadsType.value]
   }
   sendRequest("async_setpoint", dac_setpoint)
 }
@@ -339,8 +347,13 @@ let saveForm = ref(null)
 const launchSaveValid = ref(false)
 function launchSave()
 {
-  //saveForm.value.validate()
-  disableButtons.value = true
+  saveForm.value.validate()
+  if (launchSaveValid.value)
+  {  
+    disableButtons.value = true
+    sendRequest("save_acquisition", dac_setpoint+","+operator.value+","+optSN.value+","+tiaSN.value+","+converterSN.value)
+  }
+
 }
 </script>
 
@@ -422,7 +435,7 @@ function launchSave()
                         v-model="ipAddress"
                         label="IP Address"
                         :rules="ipAddressRule"
-                        :disabled="disableButtons"
+                        :disabled="disableButtons && connected"
                       />
                     </VCol>
 
@@ -432,7 +445,6 @@ function launchSave()
                       class="mt-1"
                     >
                       <VBtn
-                        :disabled="disableButtons"
                         @click="connectWebsocket"
                       >
                         {{ connected ? "Close" : "Connect" }}
@@ -748,6 +760,7 @@ function launchSave()
                         v-model="operator"
                         label="Operator"
                         :rules="requiredRules"
+                        :disabled="disableButtons"
                       />
                     </VCol>
                     <VCol
@@ -758,6 +771,7 @@ function launchSave()
                         v-model="optSN"
                         label="OPT SN"
                         :rules="requiredRules"
+                        :disabled="disableButtons"
                       />
                     </VCol>
                   </VRow>
@@ -770,6 +784,7 @@ function launchSave()
                         v-model="tiaSN"
                         label="TIA SN"
                         :rules="requiredRules"
+                        :disabled="disableButtons"
                       />
                     </VCol>
                     <VCol
@@ -780,6 +795,7 @@ function launchSave()
                         v-model="converterSN"
                         label="Converter SN"
                         :rules="requiredRules"
+                        :disabled="disableButtons"
                       />
                     </VCol>
                   </VRow>
@@ -787,7 +803,7 @@ function launchSave()
                     <VCol>
                       <VBtn 
                         :disabled="disableButtons"
-                        :loading="disableButtons"
+                        :loading="disableButtons && connected"
                         @click="launchSave"
                       >
                         Launch & Save
