@@ -52,19 +52,19 @@ let chartChannels =
 {
   "FL1" : {
     "min": 2,
-    "max": 8,
+    "max": 6.5,
   },
   "FL2": {
     "min": 1.5,
-    "max": 8,
+    "max": 6.5,
   },
   "SSC": {
     "min": 2,
-    "max": 8,
+    "max": 6.5,
   },
   "FSC": {
     "min": 2,
-    "max": 8,
+    "max": 6.5,
   },
 }
 
