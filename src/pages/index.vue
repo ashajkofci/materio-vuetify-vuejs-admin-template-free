@@ -12,7 +12,7 @@ const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
 const integrationTimes = [1, 5, 10, 15, 20, 30, 60, 120]
 
 // Form fields
-const ipAddress = ref("172.16.11.61:8001")
+const ipAddress = ref("172.16.11.150:8001")
 const eventBuffer = ref(20)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")

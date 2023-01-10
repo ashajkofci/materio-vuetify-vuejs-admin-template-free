@@ -1,6 +1,6 @@
 {
-    "name": "bactosense-live",
-    "version": "0.0.1",
+    "name": "bactocontrol-gui",
+    "version": "0.0.2",
     "scripts": {
         "dev": "npm run build:icons && vite --host",
         "build": "npm run build:icons && vite build",
