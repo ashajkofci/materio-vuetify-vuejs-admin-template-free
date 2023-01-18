@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, onMounted, watchEffect } from "vue"
 import { VueEcharts } from 'vue3-echarts'
 import * as echarts from 'echarts'
 
@@ -9,7 +9,7 @@ const root = ref(null)
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
 const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
-const integrationTimes = [1, 5, 10, 15, 20, 30, 60, 120]
+const integrationTimes = [1, 5, 10, 15, 20, 30]
 
 // Form fields
 const ipAddress = ref("172.16.11.150:8001")
@@ -18,7 +18,7 @@ const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("FL2")
 const beadsType = ref("beads")
-const statsIntegrationTime = ref(integrationTimes[5])
+const statsIntegrationTime = ref(integrationTimes[1])
 const operator = ref("")
 const optSN = ref("")
 const tiaSN = ref("")
@@ -176,9 +176,23 @@ function refreshChart()
     },
   )
 }
+const valid_data = ref()
 
 onMounted( () => {
 
+})
+
+watchEffect(() => {
+  // compute tests
+  if (statsData.value && statsData.value['ssc'])
+  {
+    valid_data.value = {
+      'fl1': statsData.value['fl1'] ? statsData.value['fl1'].mean > 3 : false,
+      'fl2': statsData.value['fl2'] ? statsData.value['fl2'].mean > 3 : false,
+      'ssc': statsData.value['ssc'] ? statsData.value['ssc'].mean > 3 : false,
+      'fsc': statsData.value['fsc'] ? statsData.value['fsc'].mean > 3 : false,
+    }
+  }
 })
 
 // Form rules
@@ -600,7 +614,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.ssc.mean.toFixed(2) : "" }}
                           </td>
                           <td class="text-center">
-                            🐸
+                            {{ (valid_data && valid_data.ssc) ? (valid_data.ssc ? "🐸" : "🐙"):"🐙"}}
                           </td>
                         </tr>
                         <tr>
@@ -617,7 +631,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.fl1.mean.toFixed(2) : "" }}
                           </td>
                           <td class="text-center">
-                            🐙
+                            {{ (valid_data && valid_data.ssc) ? (valid_data.fl1 ? "🐸" : "🐙"):"🐙"}}
                           </td>
                         </tr>    
                         <tr>
@@ -634,7 +648,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.fl2.mean.toFixed(2) : "" }}
                           </td>
                           <td class="text-center">
-                            🐸
+                            {{ (valid_data && valid_data.ssc) ? (valid_data.fl2 ? "🐸" : "🐙"):"🐙"}}
                           </td>
                         </tr>    
                         <tr>
@@ -651,7 +665,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.fsc.mean.toFixed(2) : "" }}
                           </td>
                           <td class="text-center">
-                            🐸
+                            {{ (valid_data && valid_data.ssc) ? (valid_data.fsc ? "🐸" : "🐙"):"🐙"}}
                           </td>
                         </tr>                                  
                       </tbody>
