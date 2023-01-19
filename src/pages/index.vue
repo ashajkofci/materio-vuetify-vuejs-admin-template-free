@@ -182,15 +182,29 @@ onMounted( () => {
 
 })
 
+// eslint-disable-next-line sonarjs/cognitive-complexity
 watchEffect(() => {
   // compute tests
   if (statsData.value && statsData.value['ssc'])
   {
-    valid_data.value = {
-      'fl1': statsData.value['fl1'] ? statsData.value['fl1'].mean > 3 : false,
-      'fl2': statsData.value['fl2'] ? statsData.value['fl2'].mean > 3 : false,
-      'ssc': statsData.value['ssc'] ? statsData.value['ssc'].mean > 3 : false,
-      'fsc': statsData.value['fsc'] ? statsData.value['fsc'].mean > 3 : false,
+    // eslint-disable-next-line sonarjs/no-all-duplicated-branches
+    if (beadsType.value == "3um")
+    {
+      valid_data.value = {
+        'fl1': statsData.value['fl1'] ? (statsData.value['fl1'].offset < -25000*64 && statsData.value['fl1'].cv < 0.1) : false,
+        'fl2': statsData.value['fl2'] ? (statsData.value['fl2'].offset < -25000*64 && statsData.value['fl2'].cv < 0.1) : false ,
+        'ssc': statsData.value['ssc'] ? (statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
+        'fsc': statsData.value['fsc'] ? true : false,
+      }
+    } else
+    // eslint-disable-next-line sonarjs/no-duplicated-branches
+    {
+      valid_data.value = {
+        'fl1': statsData.value['fl1'] ? (statsData.value['fl1'].median > 6.03 && statsData.value['fl1'].cv < 0.1 && statsData.value['fl1'].offset < -25000*64) : false,
+        'fl2': statsData.value['fl2'] ? statsData.value['fl2'].offset < -25000*64 : false,
+        'ssc': statsData.value['ssc'] ? (statsData.value['ssc'].median > 5.2 && statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
+        'fsc': statsData.value['fsc'] ? true : false,
+      }
     }
   }
 })
@@ -592,7 +606,7 @@ function launchSave()
                             rCV [%]
                           </th>
                           <th class="text-center text-uppercase">
-                            Mean
+                            Offset
                           </th>
                           <th class="text-center text-uppercase">
                             Valid
@@ -611,7 +625,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? (statsData.ssc.cv*100).toFixed(1) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (statsData && statsData.ssc) ? statsData.ssc.mean.toFixed(2) : "" }}
+                            {{ (statsData && statsData.ssc) ? statsData.ssc.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
                             {{ (valid_data && valid_data.ssc) ? (valid_data.ssc ? "🐸" : "🐙"):"🐙"}}
@@ -628,7 +642,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? (statsData.fl1.cv*100).toFixed(1) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (statsData && statsData.ssc) ? statsData.fl1.mean.toFixed(2) : "" }}
+                            {{ (statsData && statsData.ssc) ? statsData.fl1.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
                             {{ (valid_data && valid_data.ssc) ? (valid_data.fl1 ? "🐸" : "🐙"):"🐙"}}
@@ -645,7 +659,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? (statsData.fl2.cv*100).toFixed(1) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (statsData && statsData.ssc) ? statsData.fl2.mean.toFixed(2) : "" }}
+                            {{ (statsData && statsData.ssc) ? statsData.fl2.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
                             {{ (valid_data && valid_data.ssc) ? (valid_data.fl2 ? "🐸" : "🐙"):"🐙"}}
@@ -662,7 +676,7 @@ function launchSave()
                             {{ ( statsData && statsData.ssc) ? (statsData.fsc.cv*100).toFixed(1): "" }}
                           </td>
                           <td class="text-center">
-                            {{ (statsData && statsData.ssc) ? statsData.fsc.mean.toFixed(2) : "" }}
+                            {{ (statsData && statsData.ssc) ? statsData.fsc.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
                             {{ (valid_data && valid_data.ssc) ? (valid_data.fsc ? "🐸" : "🐙"):"🐙"}}
