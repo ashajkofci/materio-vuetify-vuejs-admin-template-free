@@ -39,7 +39,10 @@ const statsData = ref(null)
 
 // Plot data
 var log_events = [Array(), Array(), Array(), Array(), Array()]
-var gates = null
+var gates_fl2 = null
+var gates_fl2_2 = null
+var gates_ssc = null
+
 
 let dacSetpoints = 
 {
@@ -109,11 +112,8 @@ function computeChartOptions(data) {
     ]}
 }
 
-function renderGate(params, api) {
-  if (xAxis.value != "FL1" || yAxis.value != "FL2")
-  {
-    return
-  }
+function renderGate_FL2_2(params, api) {
+  var gates = gates_fl2_2
 
   if (params.context.rendered) {
     return
@@ -144,6 +144,68 @@ function renderGate(params, api) {
   }
 }
 
+function renderGate_FL2(params, api) {
+  var gates = gates_fl2
+
+  if (params.context.rendered) {
+    return
+  }
+
+  params.context.rendered = true
+
+  let points = []
+  for (let i = 0; i < gates.length; i++) {
+    points.push(api.coord(gates[i]))
+  }
+
+
+  return {
+    type: 'polygon',
+    shape: {
+      points: echarts.graphic.clipPointsByRect(points, {
+        x: params.coordSys.x,
+        y: params.coordSys.y,
+        width: params.coordSys.width,
+        height: params.coordSys.height,
+      }),
+    },
+    style: api.style({
+      fill: "transparent",
+      stroke: "red",
+    }),
+  }
+}
+function renderGate_SSC(params, api) {
+  var gates = gates_ssc
+
+  if (params.context.rendered) {
+    return
+  }
+
+  params.context.rendered = true
+
+  let points = []
+  for (let i = 0; i < gates.length; i++) {
+    points.push(api.coord(gates[i]))
+  }
+
+
+  return {
+    type: 'polygon',
+    shape: {
+      points: echarts.graphic.clipPointsByRect(points, {
+        x: params.coordSys.x,
+        y: params.coordSys.y,
+        width: params.coordSys.width,
+        height: params.coordSys.height,
+      }),
+    },
+    style: api.style({
+      fill: "transparent",
+      stroke: "red",
+    }),
+  }
+}
 function refreshChart()
 {
   var data = log_events[channelIndexes[xAxis.value]+1].map((e, i) => [e, log_events[channelIndexes[yAxis.value]+1][i]])
@@ -169,8 +231,18 @@ function refreshChart()
         },
         {
           type: 'custom',
-          renderItem: renderGate,
-          data: gates,
+          renderItem: renderGate_FL2,
+          data: xAxis.value == "FL1" && yAxis.value == "FL2" ? gates_fl2 : [],
+        },
+        {
+          type: 'custom',
+          renderItem: renderGate_FL2_2,
+          data: xAxis.value == "FL1" && yAxis.value == "FL2" ? gates_fl2_2 : [],
+        },
+        {
+          type: 'custom',
+          renderItem: renderGate_SSC,
+          data: xAxis.value == "FL1" && yAxis.value == "SSC" ? gates_ssc : [],
         },
       ],
     },
@@ -244,7 +316,10 @@ async function connectWebsocket()
           if (data.error === 101) {
             console.log(data.msg)
             var events = data.msg[0]
-            gates = data.msg[1].fit_default.gates["fit-FL2"].points
+            gates_fl2 = data.msg[1].fit_default.gates["fit-FL2"].points
+            gates_fl2_2 = data.msg[1].fit_default.gates["fit-FL1-SSC-1"].points
+            gates_ssc = data.msg[1].fit_default.gates["fit-FL1-SSC-2"].points
+
             statsData.value = data.msg[2]
             events.forEach((item, index, array) => {
               log_events[0].push(item[0])
@@ -628,7 +703,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.ssc.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.ssc) ? (valid_data.ssc ? "🐸" : "🐙"):"🐙"}}
+                            {{ (valid_data && valid_data.ssc) ? (valid_data.ssc ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>
                         <tr>
@@ -645,7 +720,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.fl1.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.ssc) ? (valid_data.fl1 ? "🐸" : "🐙"):"🐙"}}
+                            {{ (valid_data && valid_data.fl1) ? (valid_data.fl1 ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>    
                         <tr>
@@ -662,7 +737,7 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.fl2.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.ssc) ? (valid_data.fl2 ? "🐸" : "🐙"):"🐙"}}
+                            {{ (valid_data && valid_data.fl2) ? (valid_data.fl2 ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>    
                         <tr>
@@ -679,9 +754,9 @@ function launchSave()
                             {{ (statsData && statsData.ssc) ? statsData.fsc.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.ssc) ? (valid_data.fsc ? "🐸" : "🐙"):"🐙"}}
+                            {{ (valid_data && valid_data.fsc) ? (valid_data.fsc ? "🐸" : "🐙"):"🐙" }}
                           </td>
-                        </tr>                                  
+                        </tr>
                       </tbody>
                     </VTable>
                   </VCol>
