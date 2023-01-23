@@ -9,11 +9,11 @@ const root = ref(null)
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
 const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
-const integrationTimes = [1, 5, 10, 15, 20, 30]
+const integrationTimes = [1, 2, 5, 10, 15, 20, 30]
 
 // Form fields
 const ipAddress = ref("172.16.11.150:8001")
-const eventBuffer = ref(20)
+const eventBuffer = ref(10)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("FL2")
@@ -833,7 +833,7 @@ function launchSave()
                   <VRow>
                     <VCol>
                       <VBtn 
-                        :disabled="disableButtons"
+                        :disabled="acquisitionStarted || disableButtons"
                         :loading="disableButtons && connected"
                         @click="launchSave"
                       >
