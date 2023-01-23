@@ -430,10 +430,7 @@ function startStopAcquisition()
 // Laser control
 function changeSetpoint()
 {
-  if (beadsType.value == "3um")
-  {
-    dac_setpoint = dacSetpoints[beadsType.value]
-  }
+  dac_setpoint = dacSetpoints[beadsType.value]
   sendRequest("async_setpoint", dac_setpoint)
 }
 
