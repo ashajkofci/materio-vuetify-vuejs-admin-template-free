@@ -13,16 +13,17 @@ const integrationTimes = [1, 2, 5, 10, 15, 20, 30]
 
 // Form fields
 const ipAddress = ref("172.16.11.150:8001")
-const eventBuffer = ref(10)
+const eventBuffer = ref(1)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
-const yAxis = ref("FL2")
+const yAxis = ref("SSC")
 const beadsType = ref("beads")
-const statsIntegrationTime = ref(integrationTimes[2])
+const statsIntegrationTime = ref(integrationTimes[3])
 const operator = ref("")
 const optSN = ref("")
 const tiaSN = ref("")
 const converterSN = ref("")
+const pumpPort = ref("beads")
 const buttonReset = ref(null)
 const buttonPrime = ref(null)
 const buttonFlush = ref(null)
@@ -257,25 +258,101 @@ onMounted( () => {
 // eslint-disable-next-line sonarjs/cognitive-complexity
 watchEffect(() => {
   // compute tests
+  valid_data.value = {
+    'fl1' :
+   {
+     'all':false,
+     'cv':false,
+     'offset':false,
+     'median':false,
+   },
+    'fl2' :
+   {
+     'all':false,
+     'cv':false,
+     'offset':false,
+     'median':false,
+   },
+    'ssc' :
+   {
+     'all':false,
+     'cv':false,
+     'offset':false,
+     'median':false,
+   },
+    'fsc' :
+   {
+     'all':false,
+     'cv':false,
+     'offset':false,
+     'median':false,
+   },
+  }
   if (statsData.value && statsData.value['ssc'])
   {
     // eslint-disable-next-line sonarjs/no-all-duplicated-branches
     if (beadsType.value == "3um")
     {
       valid_data.value = {
-        'fl1': statsData.value['fl1'] ? (statsData.value['fl1'].offset < -25000*64 && statsData.value['fl1'].cv < 0.1) : false,
-        'fl2': statsData.value['fl2'] ? (statsData.value['fl2'].offset < -25000*64 && statsData.value['fl2'].cv < 0.1) : false ,
-        'ssc': statsData.value['ssc'] ? (statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
-        'fsc': statsData.value['fsc'] ? true : false,
+        'fl1': 
+          {
+            'all': statsData.value['fl1'] ? (statsData.value['fl1'].offset < -25000*64 && statsData.value['fl1'].cv < 0.1) : false,
+            'offset': statsData.value['fl1'].offset < -25000*64,
+            'median': true,
+            'cv': statsData.value['fl1'].cv < 0.1,
+          },
+        'fl2': 
+        {
+          'all':statsData.value['fl2'] ? (statsData.value['fl2'].offset < -25000*64 && statsData.value['fl2'].cv < 0.1) : false,
+          'offset':statsData.value['fl2'].offset < -25000*64,
+          'median':true,
+          'cv':statsData.value['fl2'].cv < 0.1,
+        },
+        'ssc': 
+        {
+          'all': statsData.value['ssc'] ? (statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
+          'offset':statsData.value['ssc'].offset < -20000*64,
+          'cv':statsData.value['ssc'].cv < 0.2,
+          'median':true,
+        },
+        'fsc': {
+          'all':statsData.value['fsc'] ? true : false,
+          'offset':true,
+          'cv':true,
+          'median':true,
+        },
       }
     } else
     // eslint-disable-next-line sonarjs/no-duplicated-branches
     {
       valid_data.value = {
-        'fl1': statsData.value['fl1'] ? (statsData.value['fl1'].median > 6.03 && statsData.value['fl1'].cv < 0.1 && statsData.value['fl1'].offset < -25000*64) : false,
-        'fl2': statsData.value['fl2'] ? statsData.value['fl2'].offset < -25000*64 : false,
-        'ssc': statsData.value['ssc'] ? (statsData.value['ssc'].median > 5.2 && statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
-        'fsc': statsData.value['fsc'] ? true : false,
+        'fl1': 
+          {
+            'all': statsData.value['fl1'] ? (statsData.value['fl1'].median > 6.03 && statsData.value['fl1'].cv < 0.1 && statsData.value['fl1'].offset < -25000*64) : false,
+            'offset': statsData.value['fl1'].offset < -25000*64,
+            'median': statsData.value['fl1'].median > 6.03,
+            'cv': statsData.value['fl1'].cv < 0.1,
+          },
+        'fl2': 
+        {
+          'all':statsData.value['fl2'] ? statsData.value['fl2'].offset < -25000*64 : false,
+          'offset':statsData.value['fl2'].offset < -25000*64,
+          'median':true,
+          'cv':true,
+        },
+        'ssc': 
+        {
+          'all': statsData.value['ssc'] ? (statsData.value['ssc'].median > 5.2 && statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
+          'offset':statsData.value['ssc'].offset < -20000*64,
+          'cv':statsData.value['ssc'].cv < 0.2,
+          'median':statsData.value['ssc'].median > 5.2,
+        },
+        'fsc': {
+          'all':statsData.value['fsc'] ? true : false,
+          'offset':true,
+          'cv':true,
+          'median':true,
+        },
       }
     }
   }
@@ -442,7 +519,7 @@ function launchPump(type)
   {
     startStopAcquisition()
   }
-  sendRequest("async_pump", type)
+  sendRequest("async_pump", type+","+pumpPort.value)
 }
 
 // Save acquisition
@@ -454,7 +531,7 @@ function launchSave()
   if (launchSaveValid.value)
   {  
     disableButtons.value = true
-    sendRequest("save_acquisition", dac_setpoint+","+operator.value+","+optSN.value+","+tiaSN.value+","+converterSN.value)
+    sendRequest("save_acquisition", operator.value+","+optSN.value+","+tiaSN.value+","+converterSN.value)
   }
 
 }
@@ -690,68 +767,104 @@ function launchSave()
                           <td>
                             SSC
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.ssc.median}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.ssc.median.toFixed(2) : "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.ssc.cv}"
+                          >
                             {{ (statsData && statsData.ssc) ? (statsData.ssc.cv*100).toFixed(1) : "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.ssc.offset}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.ssc.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.ssc) ? (valid_data.ssc ? "🐸" : "🐙"):"🐙" }}
+                            {{ (valid_data && valid_data.ssc) ? (valid_data.ssc.all ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>
                         <tr>
                           <td>
                             FL1
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fl1.median}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.fl1.median.toFixed(2) : "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fl1.cv}"
+                          >
                             {{ (statsData && statsData.ssc) ? (statsData.fl1.cv*100).toFixed(1) : "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fl1.offset}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.fl1.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.fl1) ? (valid_data.fl1 ? "🐸" : "🐙"):"🐙" }}
+                            {{ (valid_data && valid_data.fl1) ? (valid_data.fl1.all ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>    
                         <tr>
                           <td>
                             FL2
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fl2.median}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.fl2.median.toFixed(2) : "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fl2.cv}"
+                          >
                             {{ (statsData && statsData.ssc) ? (statsData.fl2.cv*100).toFixed(1) : "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fl2.offset}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.fl2.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.fl2) ? (valid_data.fl2 ? "🐸" : "🐙"):"🐙" }}
+                            {{ (valid_data && valid_data.fl2) ? (valid_data.fl2.all ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>    
                         <tr>
                           <td>
                             FSC
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fsc.median}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.fsc.median.toFixed(2) : "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fsc.cv}"
+                          >
                             {{ ( statsData && statsData.ssc) ? (statsData.fsc.cv*100).toFixed(1): "" }}
                           </td>
-                          <td class="text-center">
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.fsc.offset}"
+                          >
                             {{ (statsData && statsData.ssc) ? statsData.fsc.offset.toFixed(0) : "" }}
                           </td>
                           <td class="text-center">
-                            {{ (valid_data && valid_data.fsc) ? (valid_data.fsc ? "🐸" : "🐙"):"🐙" }}
+                            {{ (valid_data && valid_data.fsc) ? (valid_data.fsc.all ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>
                       </tbody>
@@ -770,6 +883,28 @@ function launchSave()
               class="position-relative"
             >
               <VCardText>
+                <VRow>
+                  <VCol>
+                    <VRadioGroup
+                      v-model="pumpPort"
+                      inline
+                      :disabled="disableButtons"
+                    >
+                      <VRadio
+                        label="Nanobeads"
+                        value="beads"
+                      />
+                      <VRadio
+                        label="3um beads"
+                        value="3um"
+                      />
+                      <VRadio
+                        label="Water"
+                        value="water"
+                      />
+                    </VRadioGroup>
+                  </VCol>
+                </VRow>
                 <VRow>
                   <VCol
                     cols="2"
@@ -808,6 +943,20 @@ function launchSave()
                     </VBtn>
                   </VCol>
                   <VCol
+                    cols="4"
+                  >
+                    <VBtn
+                      ref="buttonFlush"
+                      size="small"
+                      :disabled="disableButtons"
+                      @click="launchPump('store')"
+                    >
+                      Rinse & evacuate
+                    </VBtn>
+                  </VCol>
+                </VRow>
+                <VRow>
+                  <VCol
                     cols="3"
                   >
                     <VBtn
@@ -845,7 +994,7 @@ function launchSave()
             md="12"
           >
             <VCard
-              :title="'Save '+beadsType+' acquisition'"
+              title="Save acquisition"
               class="position-relative"
             >
               <VCardText>
