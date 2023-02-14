@@ -55,8 +55,8 @@ var dac_setpoint = dacSetpoints['beads']
 let chartChannels = 
 {
   "FL1" : {
-    "min": 2,
-    "max": 6.5,
+    "min": 3.1,
+    "max": 6.7,
   },
   "FL2": {
     "min": 1.5,
