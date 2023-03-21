@@ -287,6 +287,13 @@ watchEffect(() => {
      'offset':false,
      'median':false,
    },
+    'hna':
+   {
+     'all':false,
+     'cv':false,
+     'offset':false,
+     'median':false,
+   },
   }
   if (statsData.value && statsData.value['ssc'])
   {
@@ -321,6 +328,12 @@ watchEffect(() => {
           'cv':true,
           'median':true,
         },
+        'hna': {
+          'all': statsData.value['counts'] ? true : false,
+          'offset':true,
+          'cv':true,
+          'median': statsData.value['counts']['HNAP'] > 0.95,
+        },
       }
     } else
     // eslint-disable-next-line sonarjs/no-duplicated-branches
@@ -352,6 +365,12 @@ watchEffect(() => {
           'offset':true,
           'cv':true,
           'median':true,
+        },
+        'hna': {
+          'all': true,
+          'offset':true,
+          'cv':true,
+          'median': true,
         },
       }
     }
@@ -902,6 +921,26 @@ function launchSave()
                           </td>
                           <td class="text-center">
                             {{ (valid_data && valid_data.fsc) ? (valid_data.fsc.all ? "🐸" : "🐙"):"🐙" }}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            HNA
+                          </td>
+                          <td
+                            class="text-center"
+                            :class="{'red':!valid_data.hna.median}"
+                          >
+                            {{ (statsData && statsData.ssc) ? statsData.counts.HNAP.toFixed(2) : "" }}
+                          </td>
+                          <td
+                            class="text-center"
+                          />
+                          <td
+                            class="text-center"
+                          />
+                          <td class="text-center">
+                            {{ (valid_data && valid_data.hna) ? (valid_data.hna.all ? "🐸" : "🐙"):"🐙" }}
                           </td>
                         </tr>
                       </tbody>
