@@ -17,13 +17,13 @@ const eventBuffer = ref(1)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("SSC")
-const beadsType = ref("NFPPS-52-4K")
+const beadsType = ref("NFPPS524K")
 const statsIntegrationTime = ref(integrationTimes[3])
 const operator = ref("")
 const optSN = ref("")
 const detectorSN = ref("")
 const laserSN = ref("")
-const pumpPort = ref("NFPPS-52-4K")
+const pumpPort = ref("NFPPS524K")
 const buttonReset = ref(null)
 const buttonPrime = ref(null)
 const buttonFlush = ref(null)
@@ -45,12 +45,12 @@ var gates_fl2_2 = null
 var gates_ssc = null
 
 
-let dacSetpoints = 
+const dacSetpoints = 
 {
-  "URFP-30-2": 300,
-  "NFPPS-52-4K": 1500,
+  "URFP302": 300,
+  "NFPPS524K": 1500,
 }
-var dac_setpoint = dacSetpoints['NFPPS-52-4K']
+var dac_setpoint = dacSetpoints['NFPPS524K']
 
 let chartChannels = 
 {
@@ -291,7 +291,7 @@ watchEffect(() => {
   if (statsData.value && statsData.value['ssc'])
   {
     // eslint-disable-next-line sonarjs/no-all-duplicated-branches
-    if (beadsType.value == "URFP-30-2")
+    if (beadsType.value == "URFP302")
     {
       valid_data.value = {
         'fl1': 
@@ -730,12 +730,12 @@ function launchSave()
                         @update:modelValue="changeSetpoint"
                       >
                         <VRadio
-                          label="NFPPS-52-K4"
-                          value="NFPPS-52-K4"
+                          label="NFPPS-52-4K"
+                          value="NFPPS524K"
                         />
                         <VRadio
                           label="URFP-30-2"
-                          value="URFP-30-2"
+                          value="URFP302"
                         />
                       </VRadioGroup>
                     </VCol>
@@ -919,11 +919,11 @@ function launchSave()
                     >
                       <VRadio
                         label="NFPPS-52-4K"
-                        value="NFPPS-52-4K"
+                        value="NFPPS524K"
                       />
                       <VRadio
                         label="URFP-30-2"
-                        value="URFP-30-2"
+                        value="URFP302"
                       />
                       <VRadio
                         label="Water"
