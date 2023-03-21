@@ -17,13 +17,13 @@ const eventBuffer = ref(1)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("SSC")
-const beadsType = ref("beads")
+const beadsType = ref("NFPPS-52-4K")
 const statsIntegrationTime = ref(integrationTimes[3])
 const operator = ref("")
 const optSN = ref("")
-const tiaSN = ref("")
-const converterSN = ref("")
-const pumpPort = ref("beads")
+const detectorSN = ref("")
+const laserSN = ref("")
+const pumpPort = ref("NFPPS-52-4K")
 const buttonReset = ref(null)
 const buttonPrime = ref(null)
 const buttonFlush = ref(null)
@@ -47,10 +47,10 @@ var gates_ssc = null
 
 let dacSetpoints = 
 {
-  "3um": 250,
-  "beads": 1500,
+  "URFP-30-2": 300,
+  "NFPPS-52-4K": 1500,
 }
-var dac_setpoint = dacSetpoints['beads']
+var dac_setpoint = dacSetpoints['NFPPS-52-4K']
 
 let chartChannels = 
 {
@@ -291,7 +291,7 @@ watchEffect(() => {
   if (statsData.value && statsData.value['ssc'])
   {
     // eslint-disable-next-line sonarjs/no-all-duplicated-branches
-    if (beadsType.value == "3um")
+    if (beadsType.value == "URFP-30-2")
     {
       valid_data.value = {
         'fl1': 
@@ -494,11 +494,21 @@ function startStopAcquisition()
   } else {
     // Start acquisition
     acquisitionStarted.value = true
-    var dac_setpoint = 1500
-    if (beadsType.value == "3um")
-    {
-      dac_setpoint = 250
-    }
+    dac_setpoint = dacSetpoints[beadsType.value]
+    log_events = [Array(), Array(), Array(), Array(), Array()]
+    sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
+  }
+}
+
+function startAcquisitionNoStop()
+{
+  // Stop acquisition
+  if (acquisitionStarted.value)
+  {
+  } else {
+    // Start acquisition
+    acquisitionStarted.value = true
+    dac_setpoint = dacSetpoints[beadsType.value]
     log_events = [Array(), Array(), Array(), Array(), Array()]
     sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
   }
@@ -515,9 +525,16 @@ function changeSetpoint()
 function launchPump(type)
 {
   pumpMessage.value = "Launching "+ type + "..."
-  if (type == "reset" && acquisitionStarted.value)
+  if (!(type == "pump" || type == "pump2"))
   {
-    startStopAcquisition()
+    if (acquisitionStarted.value)
+    {
+      startStopAcquisition()
+    }
+  }
+  else if (!acquisitionStarted.value)
+  {
+    startAcquisitionNoStop()
   }
   sendRequest("async_pump", type+","+pumpPort.value)
 }
@@ -531,7 +548,7 @@ function launchSave()
   if (launchSaveValid.value)
   {  
     disableButtons.value = true
-    sendRequest("save_acquisition", operator.value+","+optSN.value+","+tiaSN.value+","+converterSN.value)
+    sendRequest("save_acquisition", operator.value+","+optSN.value+","+detectorSN.value+","+laserSN.value)
   }
 
 }
@@ -713,12 +730,12 @@ function launchSave()
                         @update:modelValue="changeSetpoint"
                       >
                         <VRadio
-                          label="Nanobeads"
-                          value="beads"
+                          label="NFPPS-52-K4"
+                          value="NFPPS-52-K4"
                         />
                         <VRadio
-                          label="3um beads"
-                          value="3um"
+                          label="URFP-30-2"
+                          value="URFP-30-2"
                         />
                       </VRadioGroup>
                     </VCol>
@@ -901,12 +918,12 @@ function launchSave()
                       :disabled="disableButtons"
                     >
                       <VRadio
-                        label="Nanobeads"
-                        value="beads"
+                        label="NFPPS-52-4K"
+                        value="NFPPS-52-4K"
                       />
                       <VRadio
-                        label="3um beads"
-                        value="3um"
+                        label="URFP-30-2"
+                        value="URFP-30-2"
                       />
                       <VRadio
                         label="Water"
@@ -1031,7 +1048,7 @@ function launchSave()
                     >
                       <VTextField
                         v-model="optSN"
-                        label="OPT SN"
+                        label="Optical Module SN"
                         :rules="requiredRules"
                         :disabled="disableButtons"
                       />
@@ -1043,8 +1060,8 @@ function launchSave()
                       cols="12"
                     >
                       <VTextField
-                        v-model="tiaSN"
-                        label="TIA SN"
+                        v-model="detectorSN"
+                        label="Detector Module SN"
                         :rules="requiredRules"
                         :disabled="disableButtons"
                       />
@@ -1054,8 +1071,8 @@ function launchSave()
                       cols="12"
                     >
                       <VTextField
-                        v-model="converterSN"
-                        label="Converter SN"
+                        v-model="laserSN"
+                        label="Laser Controller SN"
                         :rules="requiredRules"
                         :disabled="disableButtons"
                       />
