@@ -579,6 +579,16 @@ function launchSave()
           Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
         </VAlert>
         <VAlert
+          v-else-if="logMessage && logMessage.error == 100"
+          border="top"
+          color="success"
+        >
+          <VAlertTitle class="mb-1">
+            Status
+          </VAlertTitle>
+          {{ logMessage.msg }}
+        </VAlert>
+        <VAlert
           v-else
           border="top"
           color="success"
