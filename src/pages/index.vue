@@ -303,23 +303,23 @@ watchEffect(() => {
       valid_data.value = {
         'fl1': 
           {
-            'all': statsData.value['fl1'] ? (statsData.value['fl1'].offset < -25000*64 && statsData.value['fl1'].cv < 0.1) : false,
+            'all': statsData.value['fl1'] ? (statsData.value['fl1'].offset < -25000*64 && statsData.value['fl1'].cv < 0.1 && statsData.value['fl1'].cv > 0) : false,
             'offset': statsData.value['fl1'].offset < -25000*64,
             'median': true,
             'cv': statsData.value['fl1'].cv < 0.1,
           },
         'fl2': 
         {
-          'all':statsData.value['fl2'] ? (statsData.value['fl2'].offset < -25000*64 && statsData.value['fl2'].cv < 0.1) : false,
+          'all':statsData.value['fl2'] ? (statsData.value['fl2'].offset < -25000*64 && statsData.value['fl2'].cv < 0.1 && statsData.value['fl2'].cv > 0) : false,
           'offset':statsData.value['fl2'].offset < -25000*64,
           'median':true,
-          'cv':statsData.value['fl2'].cv < 0.1,
+          'cv':statsData.value['fl2'].cv < 0.1 && statsData.value['fl2'].cv > 0,
         },
         'ssc': 
         {
-          'all': statsData.value['ssc'] ? (statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
+          'all': statsData.value['ssc'] ? (statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].cv > 0 && statsData.value['ssc'].offset < -20000*64) : false,
           'offset':statsData.value['ssc'].offset < -20000*64,
-          'cv':statsData.value['ssc'].cv < 0.2,
+          'cv':statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].cv > 0,
           'median':true,
         },
         'fsc': {
@@ -341,10 +341,10 @@ watchEffect(() => {
       valid_data.value = {
         'fl1': 
           {
-            'all': statsData.value['fl1'] ? (statsData.value['fl1'].median > 6.03 && statsData.value['fl1'].cv < 0.1 && statsData.value['fl1'].offset < -25000*64) : false,
+            'all': statsData.value['fl1'] ? (statsData.value['fl1'].median > 6.03 &&  statsData.value['fl1'].cv > 0 && statsData.value['fl1'].cv < 0.1 && statsData.value['fl1'].offset < -25000*64) : false,
             'offset': statsData.value['fl1'].offset < -25000*64,
             'median': statsData.value['fl1'].median > 6.03,
-            'cv': statsData.value['fl1'].cv < 0.1,
+            'cv': statsData.value['fl1'].cv < 0.1 && statsData.value['fl1'].cv > 0,
           },
         'fl2': 
         {
@@ -355,9 +355,9 @@ watchEffect(() => {
         },
         'ssc': 
         {
-          'all': statsData.value['ssc'] ? (statsData.value['ssc'].median > 5.2 && statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].offset < -20000*64) : false,
+          'all': statsData.value['ssc'] ? (statsData.value['ssc'].median > 5.2 && statsData.value['ssc'].cv < 0.2 && statsData.value['ssc'].cv > 0 && statsData.value['ssc'].offset < -20000*64) : false,
           'offset':statsData.value['ssc'].offset < -20000*64,
-          'cv':statsData.value['ssc'].cv < 0.2,
+          'cv':statsData.value['ssc'].cv < 0.2 &&  statsData.value['ssc'].cv > 0,
           'median':statsData.value['ssc'].median > 5.2,
         },
         'fsc': {
