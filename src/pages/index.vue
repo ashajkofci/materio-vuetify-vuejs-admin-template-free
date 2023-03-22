@@ -329,7 +329,7 @@ watchEffect(() => {
           'median':true,
         },
         'hna': {
-          'all': statsData.value['counts'] ? true : false,
+          'all': statsData.value['counts'] ? statsData.value['counts']['HNAP'] > 0.95 : false ,
           'offset':true,
           'cv':true,
           'median': statsData.value['counts']['HNAP'] > 0.95,
