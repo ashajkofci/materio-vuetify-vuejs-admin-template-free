@@ -2,6 +2,7 @@
 import { ref, onMounted, watchEffect } from "vue"
 import { VueEcharts } from 'vue3-echarts'
 import * as echarts from 'echarts'
+import { usePersistedRef } from './usePersistedRef'
 
 // Root template
 const root = ref(null)
@@ -12,14 +13,14 @@ const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
 const integrationTimes = [1, 2, 5, 10, 15, 20, 30]
 
 // Form fields
-const ipAddress = ref("172.16.11.150:8001")
+const ipAddress = usePersistedRef("ip", "172.16.11.15:8001")
 const eventBuffer = ref(1)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("SSC")
 const beadsType = ref("NFPPS524K")
 const statsIntegrationTime = ref(integrationTimes[3])
-const operator = ref("")
+const operator = usePersistedRef("operator", "")
 const optSN = ref("")
 const detectorSN = ref("")
 const laserSN = ref("")
@@ -252,7 +253,6 @@ function refreshChart()
 const valid_data = ref()
 
 onMounted( () => {
-
 })
 
 // eslint-disable-next-line sonarjs/cognitive-complexity

@@ -1,6 +1,6 @@
 {
     "name": "bactocontrol-gui",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "scripts": {
         "dev": "npm run build:icons && vite --host",
         "build": "npm run build:icons && vite build",
