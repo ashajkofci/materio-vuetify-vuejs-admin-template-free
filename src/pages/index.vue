@@ -30,6 +30,7 @@ const buttonPrime = ref(null)
 const buttonFlush = ref(null)
 const buttonPump = ref(null)
 const buttomPump2 = ref(null)
+const buttonPull = ref(null)
 const pumpMessage = ref("")
 const wsMessage = ref("")
 const logMessage = ref("")
@@ -1054,6 +1055,18 @@ function launchSave()
                       @click="launchPump('pump2')"
                     >
                       Pump 4mn
+                    </VBtn>
+                  </VCol>
+                  <VCol
+                    cols="3"
+                  >
+                    <VBtn
+                      ref="buttonPull"
+                      size="small"
+                      :disabled="disableButtons"
+                      @click="launchPump('pulloptics')"
+                    >
+                      Pickup optics 1mn
                     </VBtn>
                   </VCol>
                 </VRow>
