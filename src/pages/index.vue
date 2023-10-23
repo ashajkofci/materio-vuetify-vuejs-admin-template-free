@@ -3,6 +3,7 @@ import { ref, onMounted, watchEffect } from "vue"
 import { VueEcharts } from 'vue3-echarts'
 import * as echarts from 'echarts'
 import { usePersistedRef } from './usePersistedRef'
+import WebsocketClient from '../layouts/components/WebsocketClient.vue'
 
 // Root template
 const root = ref(null)
@@ -13,7 +14,6 @@ const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
 const integrationTimes = [1, 2, 5, 10, 15, 20, 30]
 
 // Form fields
-const ipAddress = usePersistedRef("ip", "172.16.11.15:8001")
 const eventBuffer = ref(1)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
@@ -35,7 +35,6 @@ const pumpMessage = ref("")
 const wsMessage = ref("")
 const logMessage = ref("")
 const chart = ref(null)
-const disableButtons = ref(true)
 
 // Stat data
 const statsData = ref(null)
@@ -45,6 +44,7 @@ var log_events = [Array(), Array(), Array(), Array(), Array()]
 var gates_fl2 = null
 var gates_fl2_2 = null
 var gates_ssc = null
+
 
 
 const dacSetpoints = 
@@ -380,126 +380,6 @@ watchEffect(() => {
 
 // Form rules
 const requiredRules = [v => !!v || 'This field is required']
-const ipAddressRule = [v => (v.match(/:/g) || []).length > 0 || 'Please enter IP address or subdomain'] // wants at least two dots in address
-
-// Connect to websocket
-let websocketForm = ref(null)
-let connected = ref(false)
-const websocketFormValid = ref(false)
-let ws = null
-async function connectWebsocket()
-{
-  if (!connected.value)
-  {
-    await websocketForm.value.validate()
-
-    // Connection valid
-    if (websocketFormValid.value)
-    {
-      ws = await new WebSocket("ws://" + ipAddress.value)
-      
-      ws.onopen = function (event) {
-        wsMessage.value = "Connected!"
-        connected.value = true
-        disableButtons.value = false
-        logMessage.value = ""
-        pumpMessage.value = ""
-      }
-
-      ws.onmessage = event => {
-        let data = JSON.parse(event.data)
-        if (data.msg != "null") {
-          data.msg = JSON.parse(data.msg)
-          if (data.error === 101) {
-            console.log(data.msg)
-            var events = data.msg[0]
-            gates_fl2 = data.msg[1].fit_default.gates["fit-FL2"].points
-            gates_fl2_2 = data.msg[1].fit_default.gates["fit-FL1-SSC-1"].points
-            gates_ssc = data.msg[1].fit_default.gates["fit-FL1-SSC-2"].points
-
-            statsData.value = data.msg[2]
-            events.forEach((item, index, array) => {
-              log_events[0].push(item[0])
-              log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
-              log_events[2].push(item[2] > 0 ? Math.log10(item[2]) : 0)
-              log_events[3].push(item[3] > 0 ? Math.log10(item[3]) : 0)
-              log_events[4].push(item[4] > 0 ? Math.log10(item[4]) : 0)
-            })
-            var last_timestamp = Math.max(...log_events[0])
-
-            // Filter old events
-            var first_timestamp = last_timestamp - 200000 * eventBuffer.value
-            var timestamps_to_remove = Array()
-            log_events[0].forEach((item, index, array) => {
-              if (item < first_timestamp)
-              {
-                timestamps_to_remove.push(index)
-              }
-            })
-            for (var i = timestamps_to_remove.length -1; i >= 0; i--)
-            {
-              log_events[0].splice(timestamps_to_remove[i], 1)
-              log_events[1].splice(timestamps_to_remove[i], 1)
-              log_events[2].splice(timestamps_to_remove[i], 1)
-              log_events[3].splice(timestamps_to_remove[i], 1)
-              log_events[4].splice(timestamps_to_remove[i], 1)
-            }
-
-            refreshChart()
-          }
-          else if(data.error == 102)
-          {
-            disableButtons.value = false
-            logMessage.value = data
-          }
-          else {
-            logMessage.value = data
-          }
-        }
-      }
-
-      ws.onclose = function (event) {
-        wsMessage.value = "Disconnected!"
-        connected.value = false
-        acquisitionStarted.value = false
-      }
-
-      ws.onerror = function (err) {
-        wsMessage.value = "Socket encountered error: "+ err
-        connected.value = false
-        ws.close()
-      }
-
-    }
-  }
-  else
-  {
-    // Disconnect
-    await sendRequest("abort", "")
-    await ws.close()
-    connected.value = false
-    wsMessage.value = "Disconnected!"
-    acquisitionStarted.value = false
-  }
-}
-
-// Send WS request
-function sendRequest(command, arg) {
-  if (!connected.value)
-  {
-    console.log("not connected")
-    wsMessage.value = "Tried to send a request without connection."
-    disableButtons.value = false
-
-    return
-  }
-  const request = {
-    command: command,
-    args: String(arg),
-  }
-  ws.send(JSON.stringify(request))
-}
-
 
 // Start acquisition
 let startAcquisitionButton = ref(null)
@@ -510,13 +390,13 @@ function startStopAcquisition()
   if (acquisitionStarted.value)
   {
     acquisitionStarted.value = false
-    sendRequest("abort", "")
+    WebsocketClient.sendRequest("abort", "")
   } else {
     // Start acquisition
     acquisitionStarted.value = true
     dac_setpoint = dacSetpoints[beadsType.value]
     log_events = [Array(), Array(), Array(), Array(), Array()]
-    sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
+    WebsocketClient.sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
   }
 }
 
@@ -530,7 +410,7 @@ function startAcquisitionNoStop()
     acquisitionStarted.value = true
     dac_setpoint = dacSetpoints[beadsType.value]
     log_events = [Array(), Array(), Array(), Array(), Array()]
-    sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
+    WebsocketClient.sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
   }
 }
 
@@ -538,7 +418,7 @@ function startAcquisitionNoStop()
 function changeSetpoint()
 {
   dac_setpoint = dacSetpoints[beadsType.value]
-  sendRequest("async_setpoint", dac_setpoint)
+  WebsocketClient.sendRequest("async_setpoint", dac_setpoint)
 }
 
 // Pump control
@@ -556,7 +436,7 @@ function launchPump(type)
   {
     startAcquisitionNoStop()
   }
-  sendRequest("async_pump", type+","+pumpPort.value)
+  WebsocketClient.sendRequest("async_pump", type+","+pumpPort.value)
 }
 
 // Save acquisition
@@ -567,8 +447,8 @@ function launchSave()
   saveForm.value.validate()
   if (launchSaveValid.value)
   {  
-    disableButtons.value = true
-    sendRequest("save_acquisition", operator.value+","+optSN.value+","+detectorSN.value+","+laserSN.value)
+    WebsocketClient.disableButtons.value = true
+    WebsocketClient.sendRequest("save_acquisition", operator.value+","+optSN.value+","+detectorSN.value+","+laserSN.value)
   }
 
 }
@@ -658,50 +538,21 @@ function launchSave()
               class="position-relative"
             >
               <VCardText>
-                <VForm
-                  ref="websocketForm"
-                  v-model="websocketFormValid"
-                  lazy-validation
-                >
-                  <VRow>
-                    <VCol
-                      md="6"
-                      cols="12"
+                <VRow>
+                  <VCol
+                    md="3"
+                    cols="3"
+                    class="mt-1"
+                  >
+                    <VBtn
+                      ref="startAcquisitionButton"
+                      :disabled="WebsocketClient.disableButtons"
+                      @click="startStopAcquisition"
                     >
-                      <VTextField
-                        v-model="ipAddress"
-                        label="IP Address"
-                        :rules="ipAddressRule"
-                        :disabled="disableButtons && connected"
-                      />
-                    </VCol>
-
-                    <VCol
-                      md="3"
-                      cols="3"
-                      class="mt-1"
-                    >
-                      <VBtn
-                        @click="connectWebsocket"
-                      >
-                        {{ connected ? "Close" : "Connect" }}
-                      </VBtn>
-                    </VCol>
-                    <VCol
-                      md="3"
-                      cols="3"
-                      class="mt-1"
-                    >
-                      <VBtn
-                        ref="startAcquisitionButton"
-                        :disabled="disableButtons"
-                        @click="startStopAcquisition"
-                      >
-                        {{ acquisitionStarted ? "Stop":"Start" }}
-                      </VBtn>
-                    </VCol>
-                  </VRow>
-                </VForm>
+                      {{ acquisitionStarted ? "Stop":"Start" }}
+                    </VBtn>
+                  </VCol>
+                </VRow>
 
                 <VForm>
                   <VRow>
@@ -714,7 +565,7 @@ function launchSave()
                         label="Event buffer"
                         suffix="[s]"
                         :items="integrationTimes"
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                       />
                     </VCol>
 
@@ -735,7 +586,7 @@ function launchSave()
                         v-model="xAxis"
                         label="X-axis"
                         :items="availableChannels"
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                         @update:modelValue="refreshChart"
                       />
                     </VCol>
@@ -747,7 +598,7 @@ function launchSave()
                         v-model="yAxis"
                         label="Y-axis"
                         :items="availableChannels"
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                       />
                     </VCol>
                   </VRow>
@@ -756,7 +607,7 @@ function launchSave()
                       <VRadioGroup
                         v-model="beadsType"
                         inline
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                         @update:modelValue="changeSetpoint"
                       >
                         <VRadio
@@ -793,7 +644,7 @@ function launchSave()
                       label="Integration time"
                       :items="integrationTimes"
                       suffix="[s]"
-                      :disabled="acquisitionStarted || disableButtons"
+                      :disabled="acquisitionStarted || WebsocketClient.disableButtons"
                     />
                   </VCol>
                 </VRow>
@@ -965,7 +816,7 @@ function launchSave()
                     <VRadioGroup
                       v-model="pumpPort"
                       inline
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                     >
                       <VRadio
                         label="NFPPS-52-4K"
@@ -989,7 +840,7 @@ function launchSave()
                     <VBtn
                       ref="buttonReset"
                       size="small"
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                       @click="launchPump('reset')"
                     >
                       Reset
@@ -1001,7 +852,7 @@ function launchSave()
                     <VBtn
                       ref="buttonPrime"
                       size="small"
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                       @click="launchPump('prime')"
                     >
                       Prime
@@ -1013,7 +864,7 @@ function launchSave()
                     <VBtn
                       ref="buttonFlush"
                       size="small"
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                       @click="launchPump('flush')"
                     >
                       Flush
@@ -1025,7 +876,7 @@ function launchSave()
                     <VBtn
                       ref="buttonFlush"
                       size="small"
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                       @click="launchPump('store')"
                     >
                       Rinse & evacuate
@@ -1039,7 +890,7 @@ function launchSave()
                     <VBtn
                       ref="buttonPump"
                       size="small"
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                       @click="launchPump('pump')"
                     >
                       Pump 2mn
@@ -1051,7 +902,7 @@ function launchSave()
                     <VBtn
                       ref="buttonPump2"
                       size="small"
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                       @click="launchPump('pump2')"
                     >
                       Pump 4mn
@@ -1063,7 +914,7 @@ function launchSave()
                     <VBtn
                       ref="buttonPull"
                       size="small"
-                      :disabled="disableButtons"
+                      :disabled="WebsocketClient.disableButtons"
                       @click="launchPump('pulloptics')"
                     >
                       Pickup optics 1mn
@@ -1101,7 +952,7 @@ function launchSave()
                         v-model="operator"
                         label="Operator"
                         :rules="requiredRules"
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                       />
                     </VCol>
                     <VCol
@@ -1112,7 +963,7 @@ function launchSave()
                         v-model="optSN"
                         label="Optical Module SN"
                         :rules="requiredRules"
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                       />
                     </VCol>
                   </VRow>
@@ -1125,7 +976,7 @@ function launchSave()
                         v-model="detectorSN"
                         label="Detector Module SN"
                         :rules="requiredRules"
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                       />
                     </VCol>
                     <VCol
@@ -1136,15 +987,15 @@ function launchSave()
                         v-model="laserSN"
                         label="Laser Controller SN"
                         :rules="requiredRules"
-                        :disabled="disableButtons"
+                        :disabled="WebsocketClient.disableButtons"
                       />
                     </VCol>
                   </VRow>
                   <VRow>
                     <VCol>
                       <VBtn 
-                        :disabled="acquisitionStarted || disableButtons"
-                        :loading="disableButtons && connected"
+                        :disabled="acquisitionStarted || WebsocketClient.disableButtons"
+                        :loading="WebsocketClient.disableButtons && WebsocketClient.connected"
                         @click="launchSave"
                       >
                         Launch & Save

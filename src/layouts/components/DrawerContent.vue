@@ -4,6 +4,7 @@ import {
   VerticalNavLink,
   VerticalNavSectionTitle,
 } from '@layouts'
+import WebsocketClient from './WebsocketClient.vue'
 import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
@@ -40,8 +41,8 @@ const vuetifyTheme = useTheme()
     <VerticalNavSectionTitle :item="{ heading: 'Bactosense Control' }" />
     <VerticalNavLink
       :item="{
-        title: 'Motor control',
-        to: 'dashboard',
+        title: 'Laser control',
+        to: 'laser',
         icon: { icon: 'mdi-abacus' }
       }"
     />
@@ -52,6 +53,10 @@ const vuetifyTheme = useTheme()
         icon: { icon: 'mdi-contactless-payment-circle-outline' }
       }"
     />
+    <VerticalNavSectionTitle :item="{ heading: 'Connection' }" />
+    <div class="ml-3 mr-3">
+      <WebsocketClient />
+    </div>
   </ul>
 </template>
 
