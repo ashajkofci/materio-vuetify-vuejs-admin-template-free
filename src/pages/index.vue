@@ -54,56 +54,60 @@ var gates_fl2 = null
 var gates_fl2_2 = null
 var gates_ssc = null
 
-/*
-const { buffer } = storeToRefs(websocketData)
-watch(buffer, () => {
+const {buffer} = storeToRefs(websocketData)
+watch(buffer, _b => {
   console.log('Received new buffer data')
-  if (data.error === 101) {
-    console.log(data.msg)
-    var events = data.msg[0]
-    gates_fl2 = data.msg[1].fit_default.gates["fit-FL2"].points
-    gates_fl2_2 = data.msg[1].fit_default.gates["fit-FL1-SSC-1"].points
-    gates_ssc = data.msg[1].fit_default.gates["fit-FL1-SSC-2"].points
-
-    statsData.value = data.msg[2]
-    events.forEach((item, index, array) => {
-      log_events[0].push(item[0])
-      log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
-      log_events[2].push(item[2] > 0 ? Math.log10(item[2]) : 0)
-      log_events[3].push(item[3] > 0 ? Math.log10(item[3]) : 0)
-      log_events[4].push(item[4] > 0 ? Math.log10(item[4]) : 0)
-    })
-    var last_timestamp = Math.max(...log_events[0])
-
-    // Filter old events
-    var first_timestamp = last_timestamp - 200000 * eventBuffer.value
-    var timestamps_to_remove = Array()
-    log_events[0].forEach((item, index, array) => {
-      if (item < first_timestamp)
-      {
-        timestamps_to_remove.push(index)
-      }
-    })
-    for (var i = timestamps_to_remove.length -1; i >= 0; i--)
-    {
-      log_events[0].splice(timestamps_to_remove[i], 1)
-      log_events[1].splice(timestamps_to_remove[i], 1)
-      log_events[2].splice(timestamps_to_remove[i], 1)
-      log_events[3].splice(timestamps_to_remove[i], 1)
-      log_events[4].splice(timestamps_to_remove[i], 1)
-    }
-    refreshChart()
-  }
-  else if(data.error == 102)
+  if (_b.length === 0)
   {
-    disableButtons.value = false
-    logMessage.value = data
-  }
-  else {
-    logMessage.value = data
+    console.log("Empty data")
+
+    return
+  } else {
+    let data = _b
+
+    // Error 101 MESSAGE_ACQUISITION_DATA
+    if (data.error === 101) {
+      var events = data.msg[0]
+      gates_fl2 = data.msg[1].fit_default.gates["fit-FL2"].points
+      gates_fl2_2 = data.msg[1].fit_default.gates["fit-FL1-SSC-1"].points
+      gates_ssc = data.msg[1].fit_default.gates["fit-FL1-SSC-2"].points
+      statsData.value = data.msg[2]
+      events.forEach((item, index, array) => {
+        log_events[0].push(item[0])
+        log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
+        log_events[2].push(item[2] > 0 ? Math.log10(item[2]) : 0)
+        log_events[3].push(item[3] > 0 ? Math.log10(item[3]) : 0)
+        log_events[4].push(item[4] > 0 ? Math.log10(item[4]) : 0)
+      })
+      var last_timestamp = Math.max(...log_events[0])
+
+      // Filter old events
+      var first_timestamp = last_timestamp - 200000 * eventBuffer.value
+      var timestamps_to_remove = Array()
+      log_events[0].forEach((item, index, array) => {
+        if (item < first_timestamp)
+        {
+          timestamps_to_remove.push(index)
+        }
+      })
+      for (var i = timestamps_to_remove.length -1; i >= 0; i--)
+      {
+        log_events[0].splice(timestamps_to_remove[i], 1)
+        log_events[1].splice(timestamps_to_remove[i], 1)
+        log_events[2].splice(timestamps_to_remove[i], 1)
+        log_events[3].splice(timestamps_to_remove[i], 1)
+        log_events[4].splice(timestamps_to_remove[i], 1)
+      }
+      refreshChart()
+    }
+    else // Other error or finish message
+    {
+      isRunning.value = false
+      logMessage.value = data
+    }
   }
 })
-*/
+
 
 const dacSetpoints = 
 {
@@ -448,7 +452,7 @@ function startStopAcquisition()
   if (acquisitionStarted.value)
   {
     acquisitionStarted.value = false
-    sendRequest("abort", "")
+    websocketData.sendRequest("abort", "")
   } else {
     // Start acquisition
     acquisitionStarted.value = true
@@ -547,7 +551,7 @@ function launchSave()
           {{ logMessage.msg }}
         </VAlert>
         <VAlert
-          v-else
+          v-else-if="logMessage"
           border="top"
           color="success"
         >

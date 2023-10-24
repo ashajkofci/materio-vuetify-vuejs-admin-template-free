@@ -72,5 +72,6 @@ export const useWebsocketStore = defineStore('websocketData', () => {
     updateBuffer,
     connectWebsocket,
     wsMessage,
+    buffer,
   }
 })
