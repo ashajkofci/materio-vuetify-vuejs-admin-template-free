@@ -1,13 +1,19 @@
 <script setup>
-import { ref, onMounted, watchEffect } from "vue"
+import { ref, onMounted, watchEffect, computed } from "vue"
 import { VueEcharts } from 'vue3-echarts'
 import * as echarts from 'echarts'
 import { usePersistedRef } from './usePersistedRef'
-import websocketData from '../layouts/components/DrawerContent.vue'
+import { storeToRefs } from 'pinia'
+import {useWebsocketStore} from '../plugins/store'
 
+// Websocket connection
+const websocketData = useWebsocketStore()
 
-let connected = websocketData.isConnected
-let disableButtons = websocketData.isDisabled
+// Buttons
+let isRunning = ref(false)
+let disableButtons = computed(() => {
+  return  !websocketData.connected || isRunning.value
+})
 
 // Root template
 const root = ref(null)
@@ -36,7 +42,6 @@ const buttonPump = ref(null)
 const buttomPump2 = ref(null)
 const buttonPull = ref(null)
 const pumpMessage = ref("")
-const wsMessage = ref("")
 const logMessage = ref("")
 const chart = ref(null)
 
@@ -49,7 +54,56 @@ var gates_fl2 = null
 var gates_fl2_2 = null
 var gates_ssc = null
 
+/*
+const { buffer } = storeToRefs(websocketData)
+watch(buffer, () => {
+  console.log('Received new buffer data')
+  if (data.error === 101) {
+    console.log(data.msg)
+    var events = data.msg[0]
+    gates_fl2 = data.msg[1].fit_default.gates["fit-FL2"].points
+    gates_fl2_2 = data.msg[1].fit_default.gates["fit-FL1-SSC-1"].points
+    gates_ssc = data.msg[1].fit_default.gates["fit-FL1-SSC-2"].points
 
+    statsData.value = data.msg[2]
+    events.forEach((item, index, array) => {
+      log_events[0].push(item[0])
+      log_events[1].push(item[1] > 0 ? Math.log10(item[1]) : 0)
+      log_events[2].push(item[2] > 0 ? Math.log10(item[2]) : 0)
+      log_events[3].push(item[3] > 0 ? Math.log10(item[3]) : 0)
+      log_events[4].push(item[4] > 0 ? Math.log10(item[4]) : 0)
+    })
+    var last_timestamp = Math.max(...log_events[0])
+
+    // Filter old events
+    var first_timestamp = last_timestamp - 200000 * eventBuffer.value
+    var timestamps_to_remove = Array()
+    log_events[0].forEach((item, index, array) => {
+      if (item < first_timestamp)
+      {
+        timestamps_to_remove.push(index)
+      }
+    })
+    for (var i = timestamps_to_remove.length -1; i >= 0; i--)
+    {
+      log_events[0].splice(timestamps_to_remove[i], 1)
+      log_events[1].splice(timestamps_to_remove[i], 1)
+      log_events[2].splice(timestamps_to_remove[i], 1)
+      log_events[3].splice(timestamps_to_remove[i], 1)
+      log_events[4].splice(timestamps_to_remove[i], 1)
+    }
+    refreshChart()
+  }
+  else if(data.error == 102)
+  {
+    disableButtons.value = false
+    logMessage.value = data
+  }
+  else {
+    logMessage.value = data
+  }
+})
+*/
 
 const dacSetpoints = 
 {
@@ -451,7 +505,7 @@ function launchSave()
   saveForm.value.validate()
   if (launchSaveValid.value)
   {  
-    disableButtons = true
+    disableButtons.value = true
     websocketData.sendRequest("save_acquisition", operator.value+","+optSN.value+","+detectorSN.value+","+laserSN.value)
   }
 
@@ -550,7 +604,7 @@ function launchSave()
                   >
                     <VBtn
                       ref="startAcquisitionButton"
-                      :disabled="disableButtons"
+                      :disabled="!websocketData.connected"
                       @click="startStopAcquisition"
                     >
                       {{ acquisitionStarted ? "Stop":"Start" }}
@@ -571,14 +625,6 @@ function launchSave()
                         :items="integrationTimes"
                         :disabled="disableButtons"
                       />
-                    </VCol>
-
-                    <VCol
-                      md="6"
-                      cols="12"
-                      class="pt-6 pl-3"
-                    >
-                      {{ wsMessage }}
                     </VCol>
                   </VRow>
                   <VRow>
@@ -999,7 +1045,7 @@ function launchSave()
                     <VCol>
                       <VBtn 
                         :disabled="acquisitionStarted || disableButtons"
-                        :loading="disableButtons && connected"
+                        :loading="disableButtons && websocketData.connected"
                         @click="launchSave"
                       >
                         Launch & Save
