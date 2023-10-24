@@ -20,7 +20,7 @@
         "eslint-import-resolver-alias": "^1.1.2",
         "jwt-decode": "^3.1.2",
         "numjs": "^0.16.1",
-        "pinia": "^2.0.22",
+        "pinia": "^2.1.7",
         "prismjs": "^1.29.0",
         "sass": "^1.54.9",
         "unplugin-vue-define-options": "^0.6.2",

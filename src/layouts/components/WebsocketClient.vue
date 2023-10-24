@@ -1,24 +1,57 @@
 <script setup name="WebsocketClient">
-import { ref, onMounted, watchEffect } from "vue"
+import { ref, onMounted, watchEffect, reactive} from "vue"
 import { usePersistedRef } from '../../pages/usePersistedRef'
+import { defineStore } from 'pinia'
 
-const emit = defineEmits(["receivedMessage", "connected", "disconnected", "error"])
+// Shared with siblings
+const useWebsocketStore = defineStore('websocketData', () => {
+  const connected = ref(false)
+  const disableButtons = ref(true)
+  const connect = () => connected.value = true
+  const disconnect = () => connected.value = false
+  const disable = () => disableButtons.value = true
+  const enable = () => disableButtons.value = false
+  const sendRequest = (command, arg) => {
+    if (!connected.value)
+    {
+      console.log("not connected")
+      wsMessage.value = "Tried to send a request without connection."
+      disableButtons.value = false
+
+      return
+    }
+    const request = {
+      command: command,
+      args: String(arg),
+    }
+    ws.send(JSON.stringify(request))
+  }
+  
+  return {
+    connected,
+    disableButtons,
+    connect,
+    disconnect,
+    disable,
+    enable,
+    sendRequest,
+  }
+})
+
+const wbData = useWebsocketStore()
 
 const ipAddressRule = [v => (v.match(/:/g) || []).length > 0 || 'Please enter IP address or subdomain'] // wants at least two dots in address
 
 // Connect to websocket
 const ipAddress = usePersistedRef("ip", "172.16.11.15:8001")
 let websocketForm = ref(null)
-let connected = ref(false)
 const websocketFormValid = ref(false)
 let ws = null
-const disableButtons = ref(true)
 const wsMessage = ref("")
-
 
 async function connectWebsocket()
 {
-  if (!connected.value)
+  if (!wbData.connected)
   {
     await websocketForm.value.validate()
 
@@ -29,18 +62,13 @@ async function connectWebsocket()
       
       ws.onopen = function (event) {
         wsMessage.value = "Connected!"
-        connected.value = true
-        emit("connected")
-        disableButtons.value = false
-
-        //logMessage.value = ""
-        //pumpMessage.value = ""
+        wbData.connect()
+        wbData.enable()
       }
 
       ws.onmessage = event => {
         let data = JSON.parse(event.data)
         if (data.msg != "null") {
-          emit("receivedMessage", data)
 
           /*
           data.msg = JSON.parse(data.msg)
@@ -95,16 +123,12 @@ async function connectWebsocket()
 
       ws.onclose = function (event) {
         wsMessage.value = "Disconnected!"
-        connected.value = false
-        emit("disconnected")
-
-        //acquisitionStarted.value = false
+        wbData.disconnect()
       }
 
       ws.onerror = function (err) {
         wsMessage.value = "Socket encountered error: "+ err
-        connected.value = false
-        emit("disconnected", err)
+        wbData.disconnect()
         ws.close()
       }
 
@@ -113,38 +137,12 @@ async function connectWebsocket()
   else
   {
     // Disconnect
-    await sendRequest("abort", "")
+    await wbData.sendRequest("abort", "")
     await ws.close()
-    connected.value = false
+    wbData.disconnect()
     wsMessage.value = "Disconnected!"
-    emit("disconnected")
-
-    //acquisitionStarted.value = false
   }
 }
-
-// Send WS request
-function sendRequest(command, arg) {
-  if (!connected.value)
-  {
-    console.log("not connected")
-    wsMessage.value = "Tried to send a request without connection."
-    disableButtons.value = false
-    emit("error", "Tried to send a request without connection.")
-    
-    return
-  }
-  const request = {
-    command: command,
-    args: String(arg),
-  }
-  ws.send(JSON.stringify(request))
-}
-
-defineExpose({
-  sendRequest,
-  connected,
-})
 </script>
 
 <template>
@@ -155,27 +153,32 @@ defineExpose({
   >
     <VRow>
       <VCol
-        md="6"
         cols="12"
       >
         <VTextField
           v-model="ipAddress"
           label="IP Address"
           :rules="ipAddressRule"
-          :disabled="disableButtons && connected"
+          :disabled="wbData.disabled || wbData.connected"
         />
       </VCol>
-
+    </VRow>
+    <VRow>
       <VCol
-        md="3"
-        cols="3"
-        class="mt-1"
+        cols="6"
+        class="mt-1 mx-auto"
       >
         <VBtn
           @click="connectWebsocket"
         >
-          {{ connected ? "Close" : "Connect" }}
+          {{ wbData.connected ? "Close" : "Connect" }}
         </VBtn>
+      </VCol>
+      <VCol
+        cols="6"
+        class="align-center mt-3 justify-center"
+      >
+        {{ wsMessage }}
       </VCol>
     </VRow>
   </VForm>
