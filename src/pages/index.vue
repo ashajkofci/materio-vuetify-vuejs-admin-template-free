@@ -4,7 +4,8 @@ import { VueEcharts } from 'vue3-echarts'
 import * as echarts from 'echarts'
 import { usePersistedRef } from './usePersistedRef'
 import { storeToRefs } from 'pinia'
-import {useWebsocketStore} from '../plugins/store'
+import {useWebsocketStore} from '@/plugins/store'
+import Constants from '@/plugins/constants'
 
 // Websocket connection
 const websocketData = useWebsocketStore()
@@ -21,7 +22,6 @@ const root = ref(null)
 // Constants
 const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
 const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
-const integrationTimes = [1, 2, 5, 10, 15, 20, 30]
 
 // Form fields
 const eventBuffer = ref(1)
@@ -29,7 +29,7 @@ const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("SSC")
 const beadsType = ref("NFPPS524K")
-const statsIntegrationTime = ref(integrationTimes[3])
+const statsIntegrationTime = ref(Constants.ACQUISITION_INTEGRATION_TIMES[3])
 const operator = usePersistedRef("operator", "")
 const optSN = ref("")
 const detectorSN = ref("")
@@ -109,12 +109,7 @@ watch(buffer, _b => {
 })
 
 
-const dacSetpoints = 
-{
-  "URFP302": 300,
-  "NFPPS524K": 1500,
-}
-var dac_setpoint = dacSetpoints['NFPPS524K']
+var dac_setpoint = Constants.DAC_SETPOINTS_BEADS['NFPPS524K']
 
 let chartChannels = 
 {
@@ -456,7 +451,7 @@ function startStopAcquisition()
   } else {
     // Start acquisition
     acquisitionStarted.value = true
-    dac_setpoint = dacSetpoints[beadsType.value]
+    dac_setpoint = Constants.DAC_SETPOINTS_BEADS[beadsType.value]
     log_events = [Array(), Array(), Array(), Array(), Array()]
     websocketData.sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
   }
@@ -470,7 +465,7 @@ function startAcquisitionNoStop()
   } else {
     // Start acquisition
     acquisitionStarted.value = true
-    dac_setpoint = dacSetpoints[beadsType.value]
+    dac_setpoint = Constants.DAC_SETPOINTS_BEADS[beadsType.value]
     log_events = [Array(), Array(), Array(), Array(), Array()]
     websocketData.sendRequest("acquisition_gate", "600,"+dac_setpoint+","+statsIntegrationTime.value)
   }
@@ -479,7 +474,7 @@ function startAcquisitionNoStop()
 // Laser control
 function changeSetpoint()
 {
-  dac_setpoint = dacSetpoints[beadsType.value]
+  dac_setpoint = Constants.DAC_SETPOINTS_BEADS[beadsType.value]
   websocketData.sendRequest("async_setpoint", dac_setpoint)
 }
 
@@ -626,7 +621,7 @@ function launchSave()
                         v-model="eventBuffer"
                         label="Event buffer"
                         suffix="[s]"
-                        :items="integrationTimes"
+                        :items="Constants.ACQUISITION_INTEGRATION_TIMES"
                         :disabled="disableButtons"
                       />
                     </VCol>
@@ -696,7 +691,7 @@ function launchSave()
                     <VSelect
                       v-model="statsIntegrationTime"
                       label="Integration time"
-                      :items="integrationTimes"
+                      :items="Constants.ACQUISITION_INTEGRATION_TIMES"
                       suffix="[s]"
                       :disabled="acquisitionStarted || disableButtons"
                     />
