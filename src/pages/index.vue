@@ -6,6 +6,7 @@ import { usePersistedRef } from './usePersistedRef'
 import { storeToRefs } from 'pinia'
 import {useWebsocketStore} from '@/plugins/store'
 import Constants from '@/plugins/constants'
+import MessageBar from '@/layouts/components/MessageBar.vue'
 
 // Websocket connection
 const websocketData = useWebsocketStore()
@@ -42,7 +43,7 @@ const buttonPump = ref(null)
 const buttomPump2 = ref(null)
 const buttonPull = ref(null)
 const pumpMessage = ref("")
-const logMessage = ref("")
+const logMessage = ref(null)
 const chart = ref(null)
 
 // Stat data
@@ -495,50 +496,7 @@ function launchSave()
 
 <template>
   <div ref="root">
-    <VRow>
-      <VCol>
-        <VAlert
-          v-if="logMessage && (logMessage.error != 10 && logMessage.error != 102 && logMessage.error != 100)"
-          border="top"
-          color="error"
-        >
-          <VAlertTitle class="mb-1">
-            Error {{ logMessage.error }}
-          </VAlertTitle>
-          {{ logMessage.msg }}
-        </VAlert>
-        <VAlert
-          v-else-if="logMessage && (logMessage.error == 10 || logMessage.error == 102)"
-          border="top"
-          color="success"
-        >
-          <VAlertTitle class="mb-1">
-            {{ logMessage.msg }}
-          </VAlertTitle>
-          Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
-        </VAlert>
-        <VAlert
-          v-else-if="logMessage && logMessage.error == 100"
-          border="top"
-          color="success"
-        >
-          <VAlertTitle class="mb-1">
-            Status
-          </VAlertTitle>
-          {{ logMessage.msg }}
-        </VAlert>
-        <VAlert
-          v-else-if="logMessage"
-          border="top"
-          color="success"
-        >
-          <VAlertTitle class="mb-1">
-            Message {{ logMessage.error }}
-          </VAlertTitle>
-          {{ logMessage.msg }}
-        </VAlert>
-      </VCol>
-    </VRow>
+    <MessageBar :log-message="logMessage" />
     <VRow class="match-height">
       <VCol
         cols="8"

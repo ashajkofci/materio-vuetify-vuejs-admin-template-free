@@ -10,6 +10,7 @@ export default {
 
   AVAILABLE_CHANNELS: {"SSC":0, "FL1":1, "FL2":2, "FSC":3},
   ACQUISITION_INTEGRATION_TIMES: [1, 2, 5, 10, 15, 20, 30],
+  REFRESH_RATES: [0.5,1,2,5,10],
   PLOT_LIMITS: {
     "FL1" : {
       "min": 3.1,
