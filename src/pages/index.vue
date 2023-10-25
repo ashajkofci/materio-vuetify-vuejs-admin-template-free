@@ -20,21 +20,21 @@ let disableButtons = computed(() => {
 const root = ref(null)
 
 // Constants
-const availableChannels = ["SSC", "FL1", "FL2", "FSC"]
-const channelIndexes = {"SSC":0, "FL1":1, "FL2":2, "FSC":3}
+const availableChannels = Object.keys(Constants.AVAILABLE_CHANNELS)
+const channelIndexes = Constants.AVAILABLE_CHANNELS
 
 // Form fields
 const eventBuffer = ref(1)
 const triggerChannel = ref("FL1")
 const xAxis = ref("FL1")
 const yAxis = ref("SSC")
-const beadsType = ref("NFPPS524K")
+const beadsType = ref(Constants.BEADS_NFPPS524K)
 const statsIntegrationTime = ref(Constants.ACQUISITION_INTEGRATION_TIMES[3])
 const operator = usePersistedRef("operator", "")
 const optSN = ref("")
 const detectorSN = ref("")
 const laserSN = ref("")
-const pumpPort = ref("NFPPS524K")
+const pumpPort = ref(Constants.BEADS_NFPPS524K)
 const buttonReset = ref(null)
 const buttonPrime = ref(null)
 const buttonFlush = ref(null)
@@ -109,27 +109,9 @@ watch(buffer, _b => {
 })
 
 
-var dac_setpoint = Constants.DAC_SETPOINTS_BEADS['NFPPS524K']
+var dac_setpoint = Constants.DAC_SETPOINTS_BEADS[Constants.BEADS_NFPPS524K]
 
-let chartChannels = 
-{
-  "FL1" : {
-    "min": 3.1,
-    "max": 6.7,
-  },
-  "FL2": {
-    "min": 1.5,
-    "max": 6.5,
-  },
-  "SSC": {
-    "min": 2,
-    "max": 6.5,
-  },
-  "FSC": {
-    "min": 2,
-    "max": 6.5,
-  },
-}
+let chartChannels = Constants.PLOT_LIMITS
 
 function computeChartOptions(data) {
   return {
