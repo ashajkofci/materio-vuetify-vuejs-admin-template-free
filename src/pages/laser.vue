@@ -20,10 +20,15 @@ watch(buffer, _b => {
 
   } else {
     let data = _b
+    console.log(data)
+    if (data.error === Constants.MESSAGE_ACQUISITION_DATA) {
 
-    // Error 101 MESSAGE_ACQUISITION_DATA
-    if (data.error === 101) {
-
+    }
+    else if (data.error === Constants.MESSAGE_POWER_CALIBRATION_DATA) {
+      calibration_finished.value = true
+      current_for_60mw.value = data.msg.current_for_60mw
+      plot_data.value = data.msg.plot
+      power_vs_current.value = data.msg.power_vs_current
     }
     else // Other error or finish message
     {
@@ -81,6 +86,23 @@ const buttons = [
 
 function handleButtonClick(button) {
   websocketData.sendRequest(button.command, button.args)
+}
+
+// Power calibration
+const calibration_finished = ref(false)
+const current_for_60mw = ref(0)
+const plot_data = ref("")
+let plot_image = computed(() => {
+  return "data:image/png;base64," + plot_data.value
+})
+const power_vs_current = ref(null)
+
+function launch_calibration() {
+  websocketData.sendRequest("async_laser_sweep", "")
+}
+
+function save_calibration() {
+  websocketData.sendRequest("save_calibration_current", "")
 }
 </script>
 
@@ -158,6 +180,51 @@ function handleButtonClick(button) {
             >
               {{ button.label }}
             </VBtn>
+          </VCol>
+        </VRow>
+      </VCard>
+    </VCol>
+  </VRow>
+  <VRow>
+    <VCol
+      cols="6"
+    >
+      <VCard
+        title="Power calibration"
+        class="match-height"
+      >
+        <VRow class="ml-3 mr-3">
+          <VCol>
+            <VBtn
+              color="primary"
+              block
+              @click="launch_calibration"
+            >
+              Launch calibration
+            </VBtn>
+          </VCol>
+          <VCol>
+            <VBtn
+              color="primary"
+              block
+              :disabled="!calibration_finished"
+              @click="save_calibration"
+            >
+              Save calibration <div
+                v-if="calibration_finished"
+                class="ml-1"
+              >
+                {{ current_for_60mw.toFixed(1) }} mA
+              </div>
+            </VBtn>
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <VImg
+              v-if="plot_data.length > 0"
+              :src="plot_image"
+            />
           </VCol>
         </VRow>
       </VCard>
