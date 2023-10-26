@@ -11,6 +11,9 @@ const websocketData = useWebsocketStore()
 // Messages
 let logMessage = ref(null)
 
+// Loading status
+const isLoading = ref(false)
+
 // Websocket handling
 const {buffer, status} = storeToRefs(websocketData)
 watch(buffer, _b => {
@@ -23,6 +26,9 @@ watch(buffer, _b => {
     console.log(data)
     if (data.error === Constants.MESSAGE_ACQUISITION_DATA) {
 
+    }
+    else if (data.error === Constants.MESSAGE_FINISHED) {
+      isLoading.value = false
     }
     else if (data.error === Constants.MESSAGE_POWER_CALIBRATION_DATA) {
       calibration_finished.value = true
@@ -99,10 +105,12 @@ const power_vs_current = ref(null)
 
 function launch_calibration() {
   websocketData.sendRequest("async_laser_sweep", "")
+  isLoading.value = true
 }
 
 function save_calibration() {
   websocketData.sendRequest("save_calibration_current", "")
+  isLoading.value = true
 }
 </script>
 
@@ -176,6 +184,7 @@ function save_calibration() {
             <VBtn
               color="primary"
               block
+              :disabled="!websocketData.connected || isLoading"
               @click="handleButtonClick(button)"
             >
               {{ button.label }}
@@ -198,6 +207,8 @@ function save_calibration() {
             <VBtn
               color="primary"
               block
+              :disabled="!websocketData.connected || isLoading"
+              :loading="isLoading"
               @click="launch_calibration"
             >
               Launch calibration

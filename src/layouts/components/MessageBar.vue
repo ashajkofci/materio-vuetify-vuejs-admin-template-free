@@ -25,7 +25,7 @@ const props = defineProps({
         <VAlertTitle class="mb-1">
           {{ logMessage.msg }}
         </VAlertTitle>
-        Command: {{ logMessage.command }} / Args: {{ logMessage.args }}
+        Command: {{ logMessage.command }}<span v-if="logMessage.args.length > 0"> / Args: {{ logMessage.args }}</span>
       </VAlert>
       <VAlert
         v-else-if="logMessage && logMessage.error == 100"

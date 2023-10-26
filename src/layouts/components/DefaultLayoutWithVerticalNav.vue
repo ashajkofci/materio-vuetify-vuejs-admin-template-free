@@ -17,7 +17,14 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
 
     <!-- 👉 Pages -->
     <div class="layout-page-content">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <KeepAlive>
+          <Component
+            :is="Component"
+            :key="$route.fullPath"
+          />
+        </KeepAlive>
+      </RouterView>
     </div>
 
     <!-- 👉 Footer -->

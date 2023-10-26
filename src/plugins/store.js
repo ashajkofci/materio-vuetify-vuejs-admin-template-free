@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { watch } from 'vue'
 
 
 export const useWebsocketStore = defineStore('websocketData', () => {
@@ -7,6 +8,7 @@ export const useWebsocketStore = defineStore('websocketData', () => {
   const wsMessage = ref("")
   const status = ref(null)
   let ws = null
+  const ipAddress = ref(null)
   const updateBuffer = value => buffer.value = value
   const connect = () => connected.value = true
   const disconnect = () => connected.value = false
@@ -26,16 +28,17 @@ export const useWebsocketStore = defineStore('websocketData', () => {
     ws.send(JSON.stringify(request))
   }
 
-  async function connectWebsocket(ipAddress) {
+  async function connectWebsocket(ip) {
     if (!connected.value)
     {
       // Connect
-      ws = await new WebSocket("ws://" + ipAddress.value)
+      ws = await new WebSocket("ws://" + ip.value)
         
       ws.onopen = function (event) {
         wsMessage.value = "Connected!"
         connect()
         sendRequest("get_data", "")
+        ipAddress.value = ip.value
       }
   
       ws.onmessage = event => {
@@ -71,9 +74,24 @@ export const useWebsocketStore = defineStore('websocketData', () => {
       await ws.close()
       disconnect()
       wsMessage.value = "Disconnected!"
+      ipAddress.value = null
     }
   }
   
+  // Auto reconnect
+  watch(ipAddress, (newValue, oldValue) => {
+    if (newValue != null && ws == null)
+    {
+      connectWebsocket(ipAddress)
+    }
+  })
+
+  if (ipAddress.value != null && ws == null)
+  {
+    console.log("IP address not null")
+    connectWebsocket(ipAddress.value)
+  }
+
   return {
     connected,
     connect,
@@ -84,5 +102,6 @@ export const useWebsocketStore = defineStore('websocketData', () => {
     wsMessage,
     buffer,
     status,
+    ipAddress,
   }
-})
+}, {persist: true})
