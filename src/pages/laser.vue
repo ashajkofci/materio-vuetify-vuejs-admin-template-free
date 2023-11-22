@@ -104,12 +104,12 @@ let plot_image = computed(() => {
 const power_vs_current = ref(null)
 
 function launch_calibration() {
-  websocketData.sendRequest("async_laser_sweep", "")
+  websocketData.sendRequest("async_laser_calibration_v3", "")
   isLoading.value = true
 }
 
 function save_calibration() {
-  websocketData.sendRequest("save_calibration_current", "")
+  websocketData.sendRequest("save_laser_calibration_data", "")
   isLoading.value = true
 }
 </script>
